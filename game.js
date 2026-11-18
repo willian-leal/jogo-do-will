@@ -511,6 +511,8 @@ class Room {
       sub: this.phase === 'play' ? this.sub : null,
       drawCount: this.draw.length, discardCount: this.discard.length,
       discardTop: top ? pub(top) : null,
+      discardStack: this.discard.slice(-6).map((id) => pub(this.cards.get(id))),   // só cartas já reveladas no descarte
+      inHand: this.phase === 'play' && this.sub === 'action' && cur && cur.drawn != null ? { by: cur.id, from: cur.drawnFrom, card: cur.drawnFrom === 'discard' ? pub(this.cards.get(cur.drawn)) : null } : null,
       drawnFrom: cur && cur.id === v.id && this.sub === 'action' ? cur.drawnFrom : null,
       drawn: cur && cur.id === v.id && this.sub === 'action' && cur.drawn != null ? pub(this.cards.get(cur.drawn)) : null,
       power: this.pending ? { type: this.pending.type, by: this.pending.by } : null,

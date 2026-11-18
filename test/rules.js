@@ -220,4 +220,23 @@ assert.strictEqual(points({ rank: '10', suit: 'D' }), 10);
   assert.strictEqual(d.type, 'swap'); assert(ps[1].hand.includes(d.cardId));
   room.swap(ps[1].id, d.cardId); room.checkInvariant();
 }
-console.log('OK: regras do manual (12 grupos de verificações).');
+
+// 13. visão pública: montinho do descarte e carta na mão de quem joga
+{
+  const { room, ps } = setup(3);
+  for (let i = 0; i < 3; i++) {
+    stackDraw(room, '5', 'H'); room.doDraw(room.current().id);
+    const v = room.view(ps[1]);
+    assert(v.inHand && v.inHand.by === room.current().id && v.inHand.card === null, 'carta comprada da pilha fica escondida para os outros');
+    assert(!JSON.stringify(v.players.find((p) => p.id === room.current().id).hand).includes('rank'), 'mão continua oculta');
+    room.discardDrawn(room.current().id); room.lockUntil = 0;
+  }
+  const v = room.view(ps[0]);
+  assert.strictEqual(v.discardStack.length, 3); assert.strictEqual(v.discardStack[2].id, v.discardTop.id);
+  assert(v.discardStack.every((c) => c.rank), 'só cartas já reveladas no descarte');
+  room.takeDiscard(room.current().id);
+  const w = room.view(ps[ (room.turnIdx + 1) % 3 ]);
+  assert(w.inHand && w.inHand.from === 'discard' && w.inHand.card.rank === '5', 'carta pega do descarte é pública');
+  room.checkInvariant();
+}
+console.log('OK: regras do manual (13 grupos de verificações).');

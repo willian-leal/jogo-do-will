@@ -255,6 +255,16 @@
       : `Aguardando o anfitrião iniciar a partida…${S.turnTime ? ` · ${S.turnTime}s por turno` : ''}${S.rounds > 1 ? ` · campeonato de ${S.rounds} rodadas` : ''}`;
   }
 
+  // montinho de descarte: as últimas cartas empilhadas meio desalinhadas, a última por cima
+  function discardStackHTML(topCls) {
+    const st = S.discardStack && S.discardStack.length ? S.discardStack : [S.discardTop];
+    return `<div class="dstack">${st.map((c, i) => {
+      const last = i === st.length - 1, k = c.id;
+      const r = (((k * 37) % 21) - 10) * (last ? 0.45 : 1), x = (((k * 53) % 13) - 6) * (last ? 0.5 : 1), y = (((k * 29) % 11) - 5) * (last ? 0.5 : 1);
+      return `<div class="dwrap" style="--r:${r.toFixed(1)}deg;--x:${x.toFixed(1)}px;--y:${y.toFixed(1)}px">${cardHTML(c, { cls: last ? 'top ' + topCls : 'under' })}</div>`;
+    }).join('')}</div>`;
+  }
+
   function renderGame() {
     show('game');
     $('#gameCode').textContent = S.code;
@@ -270,10 +280,10 @@
     $('#opps').innerHTML = specs.map((p) => `
       <div class="opp ${S.turn === p.id ? 'turn' : ''}" data-pid="${p.id}">
         <div class="pname">${esc(p.name)}${botTag(p)}${winsTag(p.wins)} <small>${p.count} carta${p.count === 1 ? '' : 's'}${p.connected ? '' : ' · off'}</small>${S.turn === p.id && turnEnd ? ' <span class="timer" data-timer></span>' : ''}</div>
-        <div class="row">${p.hand.map((c) => cardHTML(c, {
+        <div class="row oprow">${p.hand.map((c) => cardHTML(c, {
           owner: p.id,
           cls: (canTarget ? 'target ' : '') + (sel.some((s) => s.id === c.id) ? 'selected' : ''),
-        })).join('')}</div>
+        })).join('')}${S.inHand && S.inHand.by === p.id ? `<div class="inhandwrap" title="${S.inHand.from === 'discard' ? 'Pegou do descarte' : 'Comprou da pilha'}">${cardHTML(S.inHand.card || { id: 0 }, { cls: 'inhand' })}</div>` : ''}</div>
         ${S.phase === 'peek' ? `<small>${p.ready ? 'pronto' : 'memorizando…'}</small>` : ''}
       </div>`).join('');
 
@@ -285,18 +295,15 @@
     const top = S.discardTop;
     const popCls = top && top.id !== prevTopId ? 'pop' : '';
     prevTopId = top ? top.id : null;
-    let drawnBlock = '';
-    if (S.drawn) drawnBlock = `<div class="pile" id="drawnPile"><div>${S.drawnFrom === 'discard' ? 'Carta pega do descarte' : 'Sua carta comprada'}</div>${cardHTML(S.drawn, { cls: 'pop' })}</div>`;
-    else if (S.phase === 'play' && S.sub === 'action') drawnBlock = `<div class="pile"><div>${esc(nameOf(S.turn))} está com uma carta</div>${cardHTML({ id: 0 })}</div>`;
     $('#center').innerHTML = S.phase === 'peek' ? '' : `
       <div class="pile ${canDraw ? 'drawable' : ''}" id="drawPile" ${canDraw ? 'data-act="draw" tabindex="0" role="button" aria-label="Comprar carta"' : ''}>
         <div>Compras (${S.drawCount})</div>${cardHTML({ id: 0 })}
         ${canDraw ? `<div>${locked ? 'aguarde…' : 'toque para comprar'}</div>` : ''}
       </div>
-      <div class="pile ${S.cutOpen ? 'cutopen' : ''} ${(canDraw && top) || canDiscard ? 'drawable' : ''}" id="discardPile" ${canDraw && top ? 'data-act="takediscard" tabindex="0" role="button" aria-label="Pegar a carta do topo do descarte"' : canDiscard ? 'data-act="discard" tabindex="0" role="button" aria-label="Descartar a carta comprada"' : ''}><div>Descarte (${S.discardCount})</div>${top ? cardHTML(top, { cls: popCls + (ghostTop.id === top.id && ghostTop.until > Date.now() ? ' ghost' : '') }) : '<div class="slot"></div>'}
+      <div class="pile ${S.cutOpen ? 'cutopen' : ''} ${(canDraw && top) || canDiscard ? 'drawable' : ''}" id="discardPile" ${canDraw && top ? 'data-act="takediscard" tabindex="0" role="button" aria-label="Pegar a carta do topo do descarte"' : canDiscard ? 'data-act="discard" tabindex="0" role="button" aria-label="Descartar a carta comprada"' : ''}><div>Descarte (${S.discardCount})</div>${top ? discardStackHTML(popCls + (ghostTop.id === top.id && ghostTop.until > Date.now() ? ' ghost' : '')) : '<div class="slot"></div>'}
         ${canDraw && top && !S.cutOpen ? '<div>toque para pegar</div>' : canDiscard ? '<div>toque para descartar</div>' : ''}
         ${S.cutOpen ? `<div class="cutlabel">${icon('cut', 14, 2.2)}corte aberto · valor ${top ? top.pts : ''}</div>${remain > 0 ? `<div class="bar"><i style="animation-duration:${LOCK_FULL}ms;animation-delay:-${Math.max(0, LOCK_FULL - remain)}ms"></i></div>` : ''}` : ''}</div>
-      ${drawnBlock}`;
+      `;
 
     /* mensagem de status */
     let msg = '', mine = false;
@@ -353,10 +360,12 @@
       $('#me').className = 'me' + (myTurn ? ' turn' : '');
       $('#me').dataset.pid = S.you;
       $('#me').innerHTML = `
-        <div class="row">${mp.hand.map((c) => cardHTML(c, {
+        <div class="row five">${mp.hand.map((c) => cardHTML(c, {
           owner: S.you,
           cls: (mode === 'cut' ? 'cutmode ' : meTargets ? 'clickable ' : S.cutOpen && S.phase === 'play' ? 'cutready ' : '') + (sel.some((s) => s.id === c.id) ? 'selected' : ''),
-        })).join('')}</div>
+        })).join('')}${S.phase === 'ended' ? '' : (S.drawn
+          ? `<div class="handslot has" id="drawnPile" title="${S.drawnFrom === 'discard' ? 'Pegou do descarte: troque por uma carta sua' : 'Toque numa carta sua para trocar ou no descarte para descartar'}">${cardHTML(S.drawn, { cls: 'inhand pop' })}</div>`
+          : `<div class="handslot ${S.phase === 'play' ? '' : 'hid'}"></div>`)}</div>
         <div class="mehead">${esc(mp.name)}${winsTag(mp.wins)} <small>(você) · ${mp.count} carta${mp.count === 1 ? '' : 's'}</small>${myTurn && turnEnd ? ' <span class="timer" data-timer></span>' : ''}</div>`;
     } else {
       $('#me').innerHTML = '';
@@ -501,12 +510,12 @@
   function shake(el) { if (el) el.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-8px)' }, { transform: 'translateX(8px)' }, { transform: 'translateX(-5px)' }, { transform: 'translateX(0)' }], { duration: 420 }); }
   function processFx() {
     const list = fxQueue; fxQueue = [];
-    const disc = () => document.querySelector('#discardPile .card');
+    const disc = () => document.querySelector('#discardPile .card.top');
     for (const f of list) {
       const who = nameOf(f.by);
       if (f.k === 'draw') {
         SFX.draw();
-        if (f.from === 'discard') { note(`${who} pegou ${f.card.rank} do descarte`); fly(document.querySelector('#discardPile .card'), boxOf(f.by), f.card, 420); }
+        if (f.from === 'discard') { note(`${who} pegou ${f.card.rank} do descarte`); fly(document.querySelector('#discardPile .card.top'), boxOf(f.by), f.card, 420); }
         else fly(document.querySelector('#drawPile .card'), boxOf(f.by), null, 420);
       } else if (f.k === 'discard' || (f.k === 'cut' && f.ok)) {
         if (f.k === 'cut' && f.by === S.you) bumpStats((s) => { s.cutsOk++; });
@@ -631,7 +640,7 @@
     if (!drag.started) {
       if (Math.hypot(e.clientX - drag.x, e.clientY - drag.y) < 9) return;
       drag.started = true;
-      const src = drag.el.querySelector('.card') || drag.el;
+      const src = drag.el.querySelector('.card.top') || drag.el.querySelector('.card') || drag.el;
       const r = src.getBoundingClientRect();
       dragClone = src.cloneNode(true);
       dragClone.classList.add('dragclone');

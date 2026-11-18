@@ -206,3 +206,30 @@ html.rm *,html.rm *::before,html.rm *::after{animation:none!important;transition
 .droptarget{outline:2px dashed #FFD54A;outline-offset:3px;border-radius:12px}
 #me.droptarget{outline-offset:-4px}
 html.hc .droptarget{outline-width:3px}
+
+/* montinho de descarte */
+.dstack{position:relative;width:var(--card-w);height:var(--card-h)}
+.center .dstack{--card-w:72px;--card-h:102px}
+.dwrap{position:absolute;inset:0;transform:translate(var(--x),var(--y)) rotate(var(--r))}
+.dwrap .card{--card-w:inherit;--card-h:inherit;width:100%;height:100%}
+.dwrap .card.under{box-shadow:0 2px 5px rgba(0,0,0,.45);filter:brightness(.93)}
+#discardPile.drawable .card.under,#discardPile.cutopen .card.under{animation:none;box-shadow:0 2px 5px rgba(0,0,0,.45)}
+@media (max-width:560px){.center .dstack{--card-w:64px;--card-h:90px}}
+@media (min-width:900px){.center .dstack{--card-w:84px;--card-h:118px}}
+/* carta na mão de quem está jogando */
+.me .row.five{flex-wrap:nowrap;gap:6px}
+.me .handslot{flex:none;width:var(--card-w,76px);height:var(--card-h,106px);margin-left:6px;border:2px dashed rgba(255,255,255,.22);border-radius:10px;display:flex;align-items:center;justify-content:center;position:relative}
+.me .handslot .card{--card-w:76px;--card-h:106px}
+.me .handslot.hid{visibility:hidden}
+.me .handslot.has{border-color:transparent}
+.card.inhand{box-shadow:0 0 0 3px var(--gold),0 10px 20px rgba(0,0,0,.5);transform:translateY(-6px)}
+.oprow{position:relative}
+.oprow .inhandwrap{position:absolute;right:-10px;top:-18px;z-index:3;pointer-events:none}
+.opp .card.inhand{--card-w:38px;--card-h:54px}
+@media (max-width:560px){
+  .me .row.five{gap:4px}
+  .me .row.five .card,.me .handslot,.me .handslot .card{--card-w:58px;--card-h:82px}
+  .me .handslot{width:58px;height:82px;margin-left:4px}
+  .opp .card.inhand{--card-w:32px;--card-h:45px}
+}
+@media (min-width:900px){.me .handslot,.me .handslot .card{--card-w:92px;--card-h:128px}.me .handslot{width:92px;height:128px}}

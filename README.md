@@ -93,3 +93,8 @@ Observação: as salas ficam em memória; reiniciar o servidor encerra as partid
   - com a carta na mão, **toque numa carta sua para trocar** ou **toque no descarte para descartar**;
   - com o corte aberto, toque numa carta sua do mesmo valor.
 - Quem prefere botões (ou usa teclado/leitor de tela) pode ligar **Mostrar botões de ação** em Menu → Acessibilidade.
+
+## Novidades da versão 11
+
+- **Carta na mão de quem joga:** a carta comprada deixa de aparecer no centro. Ela fica ao lado das cartas de quem comprou (no seu espaço tracejado à direita da mão; nos bots, sobreposta à mão deles). Se veio do descarte, todos veem a face; se veio da pilha, só quem comprou vê.
+- **Montinho de descarte:** as últimas cartas descartadas ficam empilhadas, levemente desalinhadas, com a última por cima. O centro da mesa fica sempre igual (só as duas pilhas).
