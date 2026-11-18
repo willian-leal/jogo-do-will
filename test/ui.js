@@ -31,30 +31,33 @@ server.listen(0, async () => {
     assert(await p.$eval('#me .card', (e) => e.tabIndex === 0 && /carta/.test(e.getAttribute('aria-label'))), 'cartas focáveis com aria-label');
     await click('#me .card:nth-child(1)'); await click('#me .card:nth-child(2)'); await sleep(200);
     await click('[data-act=ready]');
-    // joga: compra, descarta; encerra no 4º turno
+    // joga só tocando/arrastando as cartas (sem botões de ação): compra, descarta; encerra no 4º turno
     let turns = 0, tookDiscard = 0, dragged = 0; const t0 = Date.now();
-    while (Date.now() - t0 < 60000) {
-      const st = await p.evaluate(() => ({ act: [...document.querySelectorAll('#actions [data-act]')].map((e) => e.dataset.act), ended: !document.querySelector('#overlay').hidden && !!document.querySelector('#overlay .trophy') }));
+    const center = (s) => p.evaluate((q) => { const e = document.querySelector(q); if (!e) return null; const r = e.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; }, s);
+    assert(!(await p.$('#actions [data-act=draw]')), 'botão de comprar não aparece por padrão');
+    while (Date.now() - t0 < 90000) {
+      const st = await p.evaluate(() => ({ end: !!document.querySelector('#actions [data-act=end]'), skip: !!document.querySelector('#actions [data-act=skip]'), msg: document.querySelector('#msg').textContent, ended: !document.querySelector('#overlay').hidden && !!document.querySelector('#overlay .trophy') }));
       if (st.ended) break;
-      const forced = await p.evaluate(() => /pegou do descarte/.test(document.querySelector('#msg').textContent) && !document.querySelector('#actions [data-act=discard]'));
-      if (forced) { tookDiscard++; await click('#me .card:nth-child(3)'); await sleep(200); continue; }
-      if (st.act.includes('draw') && turns >= 1 && tookDiscard && !dragged) {
-        const pos = await p.evaluate(() => { const r = (s) => { const q = document.querySelector(s).getBoundingClientRect(); return { x: q.x + q.width / 2, y: q.y + q.height / 2 }; }; return { a: r('#drawPile .card'), b: r('#me .card:nth-child(2)') }; });
-        await p.mouse.move(pos.a.x, pos.a.y); await p.mouse.down();
-        for (let i = 1; i <= 8; i++) await p.mouse.move(pos.a.x + (pos.b.x - pos.a.x) * i / 8, pos.a.y + (pos.b.y - pos.a.y) * i / 8);
-        assert(await p.$('.dragclone'), 'arrastar deveria criar a carta fantasma');
-        await p.mouse.up(); dragged++;
-        const t1 = Date.now(); let passed = false;
-        while (Date.now() - t1 < 8000) { await sleep(200); const a = await p.evaluate(() => [...document.querySelectorAll('#actions [data-act]')].map((e) => e.dataset.act)); if (!a.includes('draw') && !a.includes('discard') && !a.includes('takediscard')) { passed = true; break; } }
-        assert(passed, 'arrastar a pilha sobre uma carta sua deveria comprar e trocar');
-        continue;
+      if (/pegou do descarte/.test(st.msg)) { await click('#me .card:nth-child(3)'); await sleep(250); continue; }
+      if (st.end) {                                   // minha vez, fase de comprar
+        if (turns > 3) { await click('#actions [data-act=end]'); continue; }
+        turns++;
+        if (turns === 2 && !tookDiscard && await p.$('#discardPile .card:not(.slot)')) { tookDiscard++; await click('#discardPile .card'); await sleep(2600); continue; }
+        if (turns === 3 && !dragged) {
+          const a = await center('#drawPile .card'), b = await center('#me .card:nth-child(2)');
+          await p.mouse.move(a.x, a.y); await p.mouse.down();
+          for (let i = 1; i <= 8; i++) await p.mouse.move(a.x + (b.x - a.x) * i / 8, a.y + (b.y - a.y) * i / 8);
+          assert(await p.$('.dragclone'), 'arrastar deveria criar a carta fantasma');
+          await p.mouse.up(); dragged++;
+          await sleep(3200); continue;
+        }
+        await click('#drawPile .card'); await sleep(2600); continue;
       }
-      if (st.act.includes('draw') && turns >= 1 && !tookDiscard && st.act.includes('takediscard')) { await click('#actions [data-act=takediscard]'); await sleep(2600); continue; }
-      if (st.act.includes('draw')) { turns++; if (turns > 3 && st.act.includes('end')) await click('#actions [data-act=end]'); else await click('#actions [data-act=draw]'); }
-      else if (st.act.includes('discard')) await click('#actions [data-act=discard]');
-      else if (st.act.includes('skip')) await click('#actions [data-act=skip]');
+      if (/Toque numa carta sua para trocar/.test(st.msg)) { await click('#discardPile'); await sleep(250); continue; }
+      if (st.skip) await click('#actions [data-act=skip]');
       await sleep(150);
     }
+    if (!(await p.$('#overlay .trophy'))) console.error('ESTADO FINAL', turns, tookDiscard, dragged, await p.evaluate(() => document.querySelector('#msg').textContent + ' | ' + [...document.querySelectorAll('#actions [data-act]')].map((e) => e.dataset.act)));
     assert(await p.$('#overlay .trophy'), 'tela de resultado deveria aparecer');
     assert(dragged >= 1, 'deveria ter testado o arrastar');
     assert(tookDiscard >= 1, 'deveria ter pego do descarte e trocado (fluxo forçado)');

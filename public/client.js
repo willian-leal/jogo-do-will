@@ -31,7 +31,7 @@
   const loadJSON = (k, d) => { try { return Object.assign({}, d, JSON.parse(localStorage.getItem(k) || '{}')); } catch (_) { return { ...d }; } };
   const STATS0 = { games: 0, wins: 0, rounds: 0, cutsOk: 0, cutsBad: 0, best: null };
   const bumpStats = (fn) => { const s = loadJSON('will_stats', STATS0); fn(s); try { localStorage.setItem('will_stats', JSON.stringify(s)); } catch (_) { /* ignore */ } };
-  const a11y = loadJSON('will_a11y', { hc: false, rm: window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches });
+  const a11y = loadJSON('will_a11y', { hc: false, btns: false, rm: window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches });
   function applyA11y() { document.documentElement.classList.toggle('hc', !!a11y.hc); document.documentElement.classList.toggle('rm', !!a11y.rm); }
   applyA11y();
   let seenTips = loadJSON('will_tips', {});
@@ -39,8 +39,8 @@
   const SUIT_NAMES = { S: 'espadas', H: 'copas', D: 'ouros', C: 'paus' };
   const TIP_TEXT = {
     peek: 'Toque em 2 das suas 4 cartas para olhar. Só vale uma vez: memorize e clique em “Memorizei”.',
-    draw: 'Sua vez! Toque na pilha “Compras” para comprar, ou no “Descarte” para pegar a carta do topo (aí você precisa trocar).',
-    action: 'Agora escolha: descartar a carta comprada ou trocá-la por uma das suas, sem olhar a que sai.',
+    draw: 'Sua vez! Toque (ou arraste) a pilha “Compras” para comprar, ou o “Descarte” para pegar a carta do topo (aí você precisa trocar).',
+    action: 'Agora escolha: toque no “Descarte” para descartar a carta comprada, ou toque numa carta sua para trocar (sem olhar a que sai). Dá para arrastar também.',
     cut: 'Alguém descartou! Se você tem uma carta de mesmo valor, toque nela rápido para cortar. Errou? Compra uma carta de castigo.',
     power: 'Você descartou 10, Dama ou Valete: o poder é opcional — use ou pule.',
   };
@@ -279,6 +279,7 @@
 
     /* centro: compra, descarte, carta comprada */
     const canDraw = myTurn && S.sub === 'draw';
+    const canDiscard = myTurn && S.sub === 'action' && !!S.drawn && S.drawnFrom !== 'discard';
     const remain = lockUntil - Date.now();
     const locked = remain > 0;
     const top = S.discardTop;
@@ -292,8 +293,8 @@
         <div>Compras (${S.drawCount})</div>${cardHTML({ id: 0 })}
         ${canDraw ? `<div>${locked ? 'aguarde…' : 'toque para comprar'}</div>` : ''}
       </div>
-      <div class="pile ${S.cutOpen ? 'cutopen' : ''} ${canDraw && top ? 'drawable' : ''}" id="discardPile" ${canDraw && top ? 'data-act="takediscard" tabindex="0" role="button" aria-label="Pegar a carta do topo do descarte"' : ''}><div>Descarte (${S.discardCount})</div>${top ? cardHTML(top, { cls: popCls + (ghostTop.id === top.id && ghostTop.until > Date.now() ? ' ghost' : '') }) : '<div class="slot"></div>'}
-        ${canDraw && top && !S.cutOpen ? '<div>toque para pegar</div>' : ''}
+      <div class="pile ${S.cutOpen ? 'cutopen' : ''} ${(canDraw && top) || canDiscard ? 'drawable' : ''}" id="discardPile" ${canDraw && top ? 'data-act="takediscard" tabindex="0" role="button" aria-label="Pegar a carta do topo do descarte"' : canDiscard ? 'data-act="discard" tabindex="0" role="button" aria-label="Descartar a carta comprada"' : ''}><div>Descarte (${S.discardCount})</div>${top ? cardHTML(top, { cls: popCls + (ghostTop.id === top.id && ghostTop.until > Date.now() ? ' ghost' : '') }) : '<div class="slot"></div>'}
+        ${canDraw && top && !S.cutOpen ? '<div>toque para pegar</div>' : canDiscard ? '<div>toque para descartar</div>' : ''}
         ${S.cutOpen ? `<div class="cutlabel">${icon('cut', 14, 2.2)}corte aberto · valor ${top ? top.pts : ''}</div>${remain > 0 ? `<div class="bar"><i style="animation-duration:${LOCK_FULL}ms;animation-delay:-${Math.max(0, LOCK_FULL - remain)}ms"></i></div>` : ''}` : ''}</div>
       ${drawnBlock}`;
 
@@ -307,9 +308,9 @@
       if (!playing) msg = 'Você está assistindo esta rodada.';
       else if (myTurn) {
         mine = true;
-        if (S.sub === 'draw') msg = locked ? 'Sua vez! (a janela de corte ainda está aberta…)' : 'Sua vez: compre da pilha, pegue o topo do descarte ou encerre a partida.';
-        else if (S.sub === 'action' && S.drawnFrom === 'discard') msg = 'Você pegou do descarte: clique na carta sua que vai trocar.';
-        else if (S.sub === 'action') msg = mode === 'swap' ? 'Clique na carta sua que vai para o descarte.' : 'Descarte a carta comprada ou troque por uma das suas.';
+        if (S.sub === 'draw') msg = locked ? 'Sua vez! (a janela de corte ainda está aberta…)' : 'Sua vez: toque ou arraste uma pilha (compras ou descarte), ou encerre a partida.';
+        else if (S.sub === 'action' && S.drawnFrom === 'discard') msg = 'Você pegou do descarte: toque na carta sua que vai trocar.';
+        else if (S.sub === 'action') msg = 'Toque numa carta sua para trocar, ou no descarte para descartar a comprada.';
         else if (S.sub === 'power') msg = `Poder d${powerText[S.power.type]}${S.power.type === 'J' ? ` (${sel.length}/2)` : ''}. Opcional.`;
       } else if (S.sub === 'power' && S.power) msg = `${nameOf(S.power.by)} está decidindo se usa o poder do ${S.power.type === 'Q' ? 'Dama' : S.power.type === 'J' ? 'Valete' : '10'}…`;
       else msg = `Vez de ${nameOf(S.turn)}.`;
@@ -328,18 +329,18 @@
     if (myTurn && S.sub === 'action' && S.drawnFrom === 'discard' && mode !== 'swap') mode = 'swap';
     if (S.phase === 'play' && playing) {
       if (myTurn && S.sub === 'draw') {
-        a.push(`<button class="btn primary" data-act="draw">Comprar carta</button>`);
-        if (top) a.push('<button class="btn" data-act="takediscard">Pegar do descarte</button>');
+        if (a11y.btns) a.push(`<button class="btn primary" data-act="draw">Comprar carta</button>`);
+        if (a11y.btns && top) a.push('<button class="btn" data-act="takediscard">Pegar do descarte</button>');
         a.push('<button class="btn danger" data-act="end">Encerrar partida</button>');
       }
       if (myTurn && S.sub === 'action') {
-        if (S.drawnFrom !== 'discard') {
+        if (a11y.btns && S.drawnFrom !== 'discard') {
           a.push('<button class="btn primary" data-act="discard">Descartar a comprada</button>');
           a.push(`<button class="btn ${mode === 'swap' ? 'primary' : ''}" data-act="swapmode">${mode === 'swap' ? 'Cancelar troca' : 'Trocar com uma das minhas'}</button>`);
         }
       }
       if (myTurn && S.sub === 'power') a.push('<button class="btn" data-act="skip">Não usar o poder</button>');
-      if (S.cutOpen) a.push(`<button class="btn cut ${mode === 'cut' ? 'on' : ''}" data-act="cutmode">${icon('cut', 22, 2.2)}CORTAR (C)</button>`);
+      if (S.cutOpen && a11y.btns) a.push(`<button class="btn cut ${mode === 'cut' ? 'on' : ''}" data-act="cutmode">${icon('cut', 22, 2.2)}CORTAR (C)</button>`);
     }
     if (S.phase === 'ended') a.push('<button class="btn primary" data-act="showresult">Ver resultado</button>');
     $('#actions').innerHTML = a.join('');
@@ -451,7 +452,8 @@
     $('#overlay').innerHTML = `<div class="modal"><h3>Acessibilidade</h3>
       <label class="chk"><input type="checkbox" data-a11y="hc" ${a11y.hc ? 'checked' : ''}> Alto contraste</label>
       <label class="chk"><input type="checkbox" data-a11y="rm" ${a11y.rm ? 'checked' : ''}> Reduzir animações</label>
-      <p>Teclado: Tab navega, Enter ou espaço ativa, D compra, C corta, Esc cancela.</p>
+      <label class="chk"><input type="checkbox" data-a11y="btns" ${a11y.btns ? 'checked' : ''}> Mostrar botões de ação (comprar, descartar, trocar, cortar)</label>
+      <p>Por padrão você joga tocando ou arrastando as cartas. Teclado: Tab navega, Enter ou espaço ativa, D compra, C corta, Esc cancela.</p>
       <div class="row"><button class="btn primary" data-act="closeoverlay">Pronto</button></div></div>`;
     $('#overlay').hidden = false;
   }
@@ -549,7 +551,7 @@
     if (S.phase === 'peek') { if (mine) send({ t: 'peek', cardId: id }); return; }
     if (S.phase !== 'play') return;
     if (mode === 'cut') { if (mine) { send({ t: 'cut', cardId: id }); setMode(null); } return; }
-    if (mode === 'swap' && mine) { send({ t: 'swap', cardId: id }); setMode(null); return; }
+    if ((mode === 'swap' || (S.turn === S.you && S.sub === 'action')) && mine) { send({ t: 'swap', cardId: id }); setMode(null); return; }
     const pw = S.power;
     const needsOwn = mode === 'swap' || (pw && pw.by === S.you && (pw.type === '10' || pw.type === 'J'));
     if (mine && S.cutOpen && !needsOwn) { send({ t: 'cut', cardId: id }); return; } // corte direto por toque
@@ -729,7 +731,7 @@
   document.addEventListener('change', (e) => {
     if (e.target.classList && e.target.classList.contains('turnSel')) send({ t: 'setting', turnTime: Number(e.target.value) });
     if (e.target.classList && e.target.classList.contains('paceSel')) send({ t: 'setting', fast: e.target.value === '1' });
-    if (e.target.dataset && e.target.dataset.a11y) { a11y[e.target.dataset.a11y] = e.target.checked; localStorage.setItem('will_a11y', JSON.stringify(a11y)); applyA11y(); }
+    if (e.target.dataset && e.target.dataset.a11y) { a11y[e.target.dataset.a11y] = e.target.checked; localStorage.setItem('will_a11y', JSON.stringify(a11y)); applyA11y(); if (S) render(); }
     if (e.target.classList && e.target.classList.contains('roundsSel')) send({ t: 'setting', rounds: Number(e.target.value) });
   });
   document.addEventListener('keydown', (e) => {

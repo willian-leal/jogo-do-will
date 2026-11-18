@@ -85,3 +85,11 @@ Observação: as salas ficam em memória; reiniciar o servidor encerra as partid
   - arraste a **carta comprada** sobre uma carta sua (trocar) ou sobre o descarte (descartar);
   - com o corte aberto, arraste uma carta sua até o descarte para **cortar**.
   Os destinos válidos ficam destacados e, se soltar num lugar inválido, a carta volta.
+
+## Novidades da versão 10
+
+- **Mesa sem botões de ação**: no celular só aparece "Encerrar partida" (e "Não usar o poder", quando é o caso). Tudo é feito nas próprias cartas:
+  - toque (ou arraste) a pilha de compras ou o descarte para pegar uma carta;
+  - com a carta na mão, **toque numa carta sua para trocar** ou **toque no descarte para descartar**;
+  - com o corte aberto, toque numa carta sua do mesmo valor.
+- Quem prefere botões (ou usa teclado/leitor de tela) pode ligar **Mostrar botões de ação** em Menu → Acessibilidade.
