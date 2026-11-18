@@ -418,7 +418,7 @@ class Room {
       this.fx({ k: 'cut', by: p.id, ok: false, penalty: id });
       this.logMsg(`${p.name} errou o corte e comprou uma carta de punição.`);
       this.change();
-      p.send({ t: 'toast', kind: 'bad', msg: 'Corte errado! Você pegou a carta de volta e comprou mais uma.' });
+      p.send({ t: 'toast', kind: 'bad', msg: 'Corte errado! Você comprou uma carta de punição.' });
     }
   }
 
