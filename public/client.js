@@ -385,6 +385,7 @@
     const why = r.reason === 'empty' ? `${esc(nameOf(r.by))} descartou todas as cartas.` : r.reason === 'voluntary' ? `${esc(nameOf(r.by))} encerrou a partida.` : 'As cartas acabaram.';
     const totalOf = (id) => (sr.ranking.find((x) => x.id === id) || {}).total;
     const nextLabel = multi ? (sr.done ? 'Novo campeonato' : `Próxima rodada (${sr.round + 1}/${sr.of})`) : 'Jogar de novo';
+    resultAt = Date.now();
     $('#overlay').innerHTML = `<div class="modal">
       <div class="trophy">${icon('trophy', 30, 2, '#1B1400')}</div>
       <h3>${title}</h3><p>${multi ? `Rodada ${sr.round} de ${sr.of} · ` : ''}${why} Menos pontos vence.</p>
@@ -587,6 +588,7 @@
     if (wait > 0) setTimeout(() => { if (S && S.turn === S.you && S.sub === 'draw') send({ t: 'takeDiscard' }); }, wait + 40);
     else send({ t: 'takeDiscard' });
   }
+  let resultAt = 0;
   let pendingSwap = null;   // troca pedida por arrasto antes de a carta chegar na mão
 
   /* ----------------------- arrastar e soltar (como na mesa) ----------------------- */
@@ -715,7 +717,7 @@
       case 'logtoggle': { const lp = $('#logpanel'); lp.hidden = !lp.hidden; render(); break; }
       case 'addbot': { const sel = $('#levelSel'); if (sel) { botLevel = sel.value; localStorage.setItem('will_level', botLevel); } send({ t: 'addBot', level: botLevel }); break; }
       case 'remove': send({ t: 'removePlayer', id: el.dataset.id }); break;
-      case 'start': send({ t: 'start' }); break;
+      case 'start': if (S && S.phase === 'ended' && Date.now() - resultAt < 700) break; /* duplo toque em "Encerrar" */ send({ t: 'start' }); break;
       case 'startextra': send({ t: 'start', extra: true }); break;
       case 'ready': for (const k of Object.keys(reveals)) if (reveals[k].until === Infinity) delete reveals[k]; send({ t: 'ready' }); render(); break;
       case 'draw': drawNow(); break;

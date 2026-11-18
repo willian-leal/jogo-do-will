@@ -17,7 +17,7 @@ server.listen(0, async () => {
   await p.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true });
   p.on('dialog', (d) => d.accept());
   const errs = []; p.on('pageerror', (e) => errs.push(e.message));
-  const click = async (sel) => { const r = await p.evaluate((s) => { const e = document.querySelector(s); if (!e) return null; const q = e.getBoundingClientRect(); return { x: q.x + q.width / 2, y: q.y + q.height / 2 }; }, sel); if (!r) return false; try { await p.mouse.move(r.x, r.y); await p.mouse.down(); await p.mouse.up(); } catch (_) { try { await p.mouse.up(); } catch (__) { /* ignora */ } } return true; };
+  const click = async (sel) => { if (sel !== '[data-act=closeoverlay]' && await p.evaluate(() => { const o = document.querySelector('#overlay'); return !o.hidden && !!o.querySelector('.trophy'); })) return false; /* resultado na tela: não clicar por baixo dele */ const r = await p.evaluate((s) => { const e = document.querySelector(s); if (!e) return null; const q = e.getBoundingClientRect(); return { x: q.x + q.width / 2, y: q.y + q.height / 2 }; }, sel); if (!r) return false; try { await p.mouse.move(r.x, r.y); await p.mouse.down(); await p.mouse.up(); } catch (_) { try { await p.mouse.up(); } catch (__) { /* ignora */ } } return true; };
   const fail = async (m) => { console.error('FALHOU:', m, errs); await b.close(); process.exit(1); };
   try {
     await p.goto(`http://localhost:${port}/`); await sleep(400);
@@ -40,7 +40,7 @@ server.listen(0, async () => {
       if (st.ended) break;
       if (/pegou do descarte/.test(st.msg)) { await click('#me .card:nth-child(3)'); await sleep(250); continue; }
       if (st.end) {                                   // minha vez, fase de comprar
-        if (turns > 3) { await click('#actions [data-act=end]'); continue; }
+        if (turns > 3) { await click('#actions [data-act=end]'); await sleep(1200); continue; }
         turns++;
         if (turns === 2 && !tookDiscard && await p.$('#discardPile .card:not(.slot)')) { tookDiscard++; await click('#discardPile .card'); await sleep(2600); continue; }
         if (turns === 3 && !dragged) {
