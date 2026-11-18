@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0E4A36">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Jogo do Will">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Jogo do Will</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main id="app">
+
+  <section id="home" class="screen">
+    <div class="home-card">
+      <div id="heroFan" class="hero-fan" aria-hidden="true"></div>
+      <div class="stack" style="align-items:center;gap:6px">
+        <h1>Jogo do Will</h1>
+        <p class="tag">Estratégia, memória e atenção</p>
+      </div>
+      <div class="panel">
+        <label>Seu nome
+          <input id="nameInput" maxlength="16" placeholder="Como quer ser chamado?" autocomplete="off">
+        </label>
+        <button class="btn primary big" data-act="create">Criar sala</button>
+        <button class="btn" data-act="practice">Treinar contra bots</button>
+        <div class="or">ou entre numa sala</div>
+        <div class="join-row">
+          <label>Código da sala
+            <input id="codeInput" maxlength="4" placeholder="ABCD" autocomplete="off" autocapitalize="characters">
+          </label>
+          <button class="btn big" data-act="join">Entrar</button>
+        </div>
+      </div>
+      <div class="row"><button class="link" data-act="rules">Ver as regras</button><button class="link" data-act="stats">Estatísticas</button><button class="link" data-act="a11y">Acessibilidade</button></div>
+    </div>
+  </section>
+
+  <section id="lobby" class="screen" hidden>
+    <div class="home-card">
+      <div class="stack" style="align-items:center;gap:8px">
+        <div class="logomark" style="--s:48px" aria-hidden="true"><span class="lm-back"></span><span class="lm-front">W</span></div>
+        <h2>Sala <span id="lobbyCode" class="code"></span></h2>
+        <p class="tag">Compartilhe o código ou o link com os amigos</p>
+      </div>
+      <div class="panel">
+        <button class="btn" data-act="copylink">Copiar link da sala</button>
+        <button class="btn" data-act="wpp">Convidar pelo WhatsApp</button>
+        <ul id="lobbyPlayers" class="plist"></ul>
+        <div id="lobbyHost" class="stack"></div>
+        <p id="lobbyHint" class="hint"></p>
+      </div>
+      <button class="link" data-act="leave">Sair da sala</button>
+    </div>
+  </section>
+
+  <section id="game" class="screen" hidden>
+    <header class="topbar">
+      <span class="brand"><span class="logomark" style="--s:28px" aria-hidden="true"><span class="lm-back"></span><span class="lm-front">W</span></span></span>
+      <span class="roomtag">Sala <b id="gameCode"></b> <span id="roundTag"></span></span>
+      <span class="spacer"></span>
+      <button class="chip icon" id="muteBtn" data-act="mute" aria-label="Som e vibração"></button>
+      <button class="chip icon" id="smileBtn" data-act="emojitoggle" aria-label="Reações"></button>
+      <button class="chip icon" id="menuBtn" data-act="menutoggle" aria-label="Menu"></button>
+      <div id="menu" class="menu" hidden>
+        <button data-act="rules">Regras</button>
+        <button data-act="logtoggle">Histórico</button>
+        <button data-act="tipsreset">Rever dicas</button>
+        <button data-act="stats">Estatísticas</button>
+        <button data-act="a11y">Acessibilidade</button>
+        <button data-act="leave">Sair da sala</button>
+      </div>
+    </header>
+    <div id="emojis" class="emojis" hidden>
+      <button data-act="react" data-e="👍" aria-label="Joinha">👍</button><button data-act="react" data-e="😂" aria-label="Rindo">😂</button><button data-act="react" data-e="😮" aria-label="Surpreso">😮</button><button data-act="react" data-e="😡" aria-label="Bravo">😡</button><button data-act="react" data-e="👏" aria-label="Palmas">👏</button><button data-act="react" data-e="🤔" aria-label="Pensando">🤔</button><button data-act="react" data-e="🔥" aria-label="Fogo">🔥</button><button data-act="react" data-e="😅" aria-label="Aliviado">😅</button>
+    </div>
+    <div id="opps" class="opps"></div>
+    <div id="center" class="center"></div>
+    <div id="note" class="note" role="status" aria-live="polite" hidden></div>
+    <div id="coach" class="coach" hidden></div>
+    <div id="msg" class="msg" role="status" aria-live="polite"></div>
+    <div id="actions" class="actions"></div>
+    <div id="me" class="me"></div>
+    <aside id="logpanel" class="logpanel" hidden></aside>
+  </section>
+
+  <div id="overlay" class="overlay" hidden></div>
+  <div id="toast" class="toast" hidden></div>
+</main>
+<script src="client.js"></script>
+</body>
+</html>

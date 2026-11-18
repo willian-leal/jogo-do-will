@@ -1,0 +1,19 @@
+{
+  "name": "jogo-do-will",
+  "version": "1.0.0",
+  "description": "Jogo do Will - jogo de cartas online (memória, estratégia e atenção)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test/rules.js && node test/extras.js && node test/sim.js && node test/ws.js && node test/ui.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "puppeteer-core": "^25.18.1"
+  }
+}

@@ -1,0 +1,68 @@
+# Jogo do Will
+
+Jogo de cartas online para navegador (nada para baixar). Multiplayer em salas por código/link, com bots.
+Servidor autoritativo em Node.js + WebSocket; cliente em HTML/CSS/JS puro.
+
+## Rodar localmente
+```bash
+npm install
+npm start          # http://localhost:3000
+npm test           # regras, 120 partidas simuladas com bots e teste de integração via WebSocket
+```
+Abra em duas abas (ou dois dispositivos na mesma rede) para testar o multiplayer.
+
+## Publicar (para jogar de qualquer lugar)
+Qualquer hospedagem Node com suporte a WebSocket serve (Render, Railway, Fly.io, um VPS):
+- Build: `npm install`  ·  Start: `npm start`  ·  Porta: lida de `PORT`.
+- Em Render/Railway: crie um *Web Service* apontando para este repositório; o link público já funciona em HTTPS/WSS.
+- Healthcheck: `/healthz`.
+Observação: as salas ficam em memória; reiniciar o servidor encerra as partidas em andamento.
+
+## Novidades da versão 2
+- **Bots com 3 níveis** (Fácil, Médio, Difícil): mudam memória, esquecimento, tempo de reação no corte e vontade de encerrar. Escolha o nível ao adicionar o bot no lobby. Os bots agora só encerram a partida quando têm boa certeza da própria mão (partidas ~32 turnos no total, em média).
+- **Corte por toque:** com o corte aberto, basta tocar na carta da sua mão (o botão CORTAR / tecla C continua existindo). A pilha de descarte mostra "corte aberto · valor X" e uma barra com o tempo mínimo da janela.
+- **Animações e avisos:** cartas voando (compra, descarte, corte), troca destacada, aviso de quem usou 10/Dama/Valete e em quem (sem revelar valores), tremida no corte errado.
+
+## Novidades da versão 3
+- **Relógio por turno (opcional):** o anfitrião escolhe Sem limite / 30 / 60 / 90 s no lobby ou na tela de resultado. Quando o tempo acaba, o piloto automático joga aquela vez (nunca encerra a partida por você). Contagem regressiva visível, com tique nos últimos 5 s.
+- **Sons e vibração:** efeitos sintetizados no navegador (compra, descarte, corte certo/errado, poderes, sua vez, fim de partida) e vibração no celular. Botão 🔊/🔇 no topo.
+- **Reações rápidas:** 8 emojis que flutuam sobre o jogador (botão 😀).
+- **Vitórias da sala:** o 🏆 acumula entre partidas da mesma sala (empates não contam).
+
+## Novidades da versão 4
+- **Novo visual** (a direção de design: feltro, marfim, ouro e carmim; Bricolage Grotesque + Inter): cartas com naipes em SVG, verso com o W, marca em leque, ícones no lugar de emojis na interface, menu no topo e telas ajustadas para celular e desktop.
+- **App instalável:** no iPhone, abra o link no Safari › Compartilhar › Adicionar à Tela de Início; no Android, "Instalar app". Abre em tela cheia, com ícone próprio.
+- **Compra durante a janela de corte:** se você tocar em comprar antes da hora, o jogo compra assim que liberar, sem erro.
+- **Deploy pronto:** `Dockerfile` e `render.yaml` (Render: New › Blueprint, apontando para o repositório).
+
+## Novidades da versão 5
+- **Modo campeonato (opcional):** o anfitrião escolhe "Partida única", "3 rodadas" ou "5 rodadas" no lobby ou na tela de resultado. Os pontos acumulam entre as rodadas, aparece a classificação e o campeão leva o 🏆 da sala só no fim. A configuração fica travada enquanto um campeonato está em andamento.
+- **Espectadores:** quem entra com o código durante uma partida assiste (vê o placar e as ações) e passa a jogar no próximo campeonato/partida.
+
+## Estrutura
+- `game.js` — motor das regras (turnos, cortes, poderes, pontuação, desempate), uma `Room` por sala.
+- `bot.js` — bots (memória imperfeita: às vezes esquecem ou lembram errado e erram o corte).
+- `server.js` — HTTP estático + WebSocket, reconexão por token (guardado no navegador).
+- `public/` — interface.
+- `test/` — `rules.js`, `sim.js`, `ws.js`.
+
+## Decisões de regra (pontos que o manual deixa em aberto)
+- **Turno:** comprar e então descartar a carta comprada **ou** trocá-la por uma da mão (a que sai vai para o descarte, revelada).
+- **Janela de corte:** abre a cada descarte e fecha quando alguém corta ou quando o próximo jogador compra. O próximo jogador só pode comprar ~2 s depois do descarte, para dar tempo de reação.
+- **"Mesmo valor":** igual em pontos — Rei preto (13) só corta Rei preto; Rei vermelho (0) só corta Rei vermelho.
+- **Cortes não ativam poderes** (10, Q, J só valem em descarte de turno). Quem corta pode esvaziar a mão e encerrar a partida.
+- **Valete:** as duas cartas trocadas devem ser de jogadores diferentes (pode incluir você).
+- **Memória é o jogo:** o cliente nunca mantém as cartas reveladas; elas viram de volta (10/Dama: 4 s; início: ao clicar "Memorizei").
+- **Desconexão:** se for sua vez e você estiver offline, um bot joga por você até você voltar.
+- Uma partida = uma rodada. Empate total → botão de **rodada extra** só com os empatados.
+
+## Novidades da versão 6
+
+- **Treinar contra bots**: botão na tela inicial cria uma sala com 2 bots e já começa a partida.
+- **Dicas de tutorial** na primeira vez de cada fase (memorização, compra, corte, poderes), com "Entendi" e "Rever dicas" no menu.
+- **Estatísticas locais** (partidas, vitórias, cortes certos/errados, melhor pontuação), guardadas no navegador.
+- **Acessibilidade**: alto contraste, reduzir animações, cartas focáveis por teclado com rótulos (Tab/Enter/Espaço; D compra, C corta, Esc cancela), áreas com aria-live.
+- **Mesa rápida**: janela de corte menor e turno de 20 s.
+- **Personalidades dos bots**: equilibrado, afobado e cauteloso.
+- **Robustez do servidor**: limite de mensagens por conexão e limite de salas (`MAX_ROOMS`, padrão 300).
+- **Teste de interface** (`test/ui.js`, usa puppeteer-core e Chrome; é ignorado se não houver Chrome).

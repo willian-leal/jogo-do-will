@@ -1,0 +1,9 @@
+# Blueprint do Render: crie um "Blueprint" apontando para este repositório.
+services:
+  - type: web
+    name: jogo-do-will
+    runtime: node
+    plan: free
+    buildCommand: npm install --omit=dev
+    startCommand: npm start
+    healthCheckPath: /healthz
