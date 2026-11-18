@@ -138,6 +138,13 @@
       S = m;
       LOCK_FULL = m.lockFull || 2200;
       prevTurn = m.turn; prevPhase = m.phase;
+      if (pendingSwap) {
+        if (m.turn !== m.you || Date.now() > pendingSwap.until) pendingSwap = null;
+        else if (m.sub === 'action') {
+          const id = pendingSwap.id; pendingSwap = null;
+          if (m.players.find((p) => p.id === m.you).hand.some((h) => h.id === id)) send({ t: 'swap', cardId: id });
+        }
+      }
       turnEnd = m.turnMs ? Date.now() + m.turnMs : 0;
       if (m.phase === 'play' && m.turn === m.you && wasTurn !== m.you) { SFX.turn(); vib(70); if (document.hidden) document.title = '🔔 Sua vez! · ' + BASE_TITLE; }
       if (m.phase === 'ended' && wasPhase !== 'ended' && m.result) {
@@ -278,7 +285,7 @@
     const popCls = top && top.id !== prevTopId ? 'pop' : '';
     prevTopId = top ? top.id : null;
     let drawnBlock = '';
-    if (S.drawn) drawnBlock = `<div class="pile"><div>${S.drawnFrom === 'discard' ? 'Carta pega do descarte' : 'Sua carta comprada'}</div>${cardHTML(S.drawn, { cls: 'pop' })}</div>`;
+    if (S.drawn) drawnBlock = `<div class="pile" id="drawnPile"><div>${S.drawnFrom === 'discard' ? 'Carta pega do descarte' : 'Sua carta comprada'}</div>${cardHTML(S.drawn, { cls: 'pop' })}</div>`;
     else if (S.phase === 'play' && S.sub === 'action') drawnBlock = `<div class="pile"><div>${esc(nameOf(S.turn))} está com uma carta</div>${cardHTML({ id: 0 })}</div>`;
     $('#center').innerHTML = S.phase === 'peek' ? '' : `
       <div class="pile ${canDraw ? 'drawable' : ''}" id="drawPile" ${canDraw ? 'data-act="draw" tabindex="0" role="button" aria-label="Comprar carta"' : ''}>
@@ -566,6 +573,102 @@
   // se o elemento fosse trocado entre apertar e soltar — num jogo de corte isso é fatal.
   document.addEventListener('pointerdown', (e) => { if (e.button === 0 || e.pointerType === 'touch') { onActivate(e); } });
   document.addEventListener('click', (e) => { if (e.detail === 0) onActivate(e); }); // acionamento por teclado
+  function drawNow(swapId) {
+    if (swapId != null) pendingSwap = { id: swapId, until: Date.now() + 7000 };
+    const wait = lockUntil - Date.now();   // clicou durante a janela de corte: compra assim que liberar
+    if (wait > 0) setTimeout(() => { if (S && S.turn === S.you && S.sub === 'draw') send({ t: 'draw' }); }, wait + 40);
+    else send({ t: 'draw' });
+  }
+  function takeNow(swapId) {
+    if (swapId != null) pendingSwap = { id: swapId, until: Date.now() + 7000 };
+    const wait = lockUntil - Date.now();
+    if (wait > 0) setTimeout(() => { if (S && S.turn === S.you && S.sub === 'draw') send({ t: 'takeDiscard' }); }, wait + 40);
+    else send({ t: 'takeDiscard' });
+  }
+  let pendingSwap = null;   // troca pedida por arrasto antes de a carta chegar na mão
+
+  /* ----------------------- arrastar e soltar (como na mesa) ----------------------- */
+  let drag = null, dragClone = null;
+  const myHandIds = () => { const me = S && S.players.find((p) => p.id === S.you); return me ? me.hand.map((h) => h.id) : []; };
+  function dragKind(t) {
+    if (!S || S.phase !== 'play' || !t.closest) return null;
+    const myTurn = S.turn === S.you;
+    if (myTurn && S.sub === 'draw' && t.closest('#drawPile')) return { kind: 'pile', el: t.closest('#drawPile') };
+    if (myTurn && S.sub === 'draw' && S.discardTop && t.closest('#discardPile')) return { kind: 'take', el: t.closest('#discardPile') };
+    if (myTurn && S.sub === 'action' && S.drawn && t.closest('#drawnPile')) return { kind: 'drawn', el: t.closest('#drawnPile') };
+    const ce = t.closest('[data-cid]');
+    if (ce && ce.dataset.owner === S.you && S.cutOpen && mode !== 'swap' && !(S.power && S.power.by === S.you)) return { kind: 'cutcard', el: ce, id: Number(ce.dataset.cid) };
+    return null;
+  }
+  function dropTargets(kind) {
+    const out = [];
+    if (kind === 'pile' || kind === 'take') out.push(...document.querySelectorAll('#me [data-cid]'), $('#me'));
+    if (kind === 'drawn') out.push(...document.querySelectorAll('#me [data-cid]'), $('#discardPile'));
+    if (kind === 'cutcard') out.push($('#discardPile'));
+    return out.filter(Boolean);
+  }
+  function endDrag() {
+    if (dragClone) dragClone.remove();
+    document.querySelectorAll('.droptarget').forEach((e) => e.classList.remove('droptarget'));
+    document.querySelectorAll('.dragging').forEach((e) => e.classList.remove('dragging'));
+    dragClone = null; drag = null;
+  }
+  document.addEventListener('pointerdown', (e) => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    const k = dragKind(e.target);
+    if (!k) return;
+    ac();
+    e.stopPropagation();   // o toque simples é tratado no pointerup, se não houve arrasto
+    drag = { ...k, x: e.clientX, y: e.clientY, started: false, target: e.target, pid: e.pointerId };
+    try { document.body.setPointerCapture(e.pointerId); } catch (_) { /* ignore */ }
+  }, true);
+  document.addEventListener('pointermove', (e) => {
+    if (!drag || e.pointerId !== drag.pid) return;
+    if (!drag.started) {
+      if (Math.hypot(e.clientX - drag.x, e.clientY - drag.y) < 9) return;
+      drag.started = true;
+      const src = drag.el.querySelector('.card') || drag.el;
+      const r = src.getBoundingClientRect();
+      dragClone = src.cloneNode(true);
+      dragClone.classList.add('dragclone');
+      dragClone.style.cssText = `position:fixed;left:0;top:0;width:${r.width}px;height:${r.height}px;margin:0;z-index:60;pointer-events:none;transform:translate(${r.left}px,${r.top}px)`;
+      drag.dx = e.clientX - r.left; drag.dy = e.clientY - r.top;
+      document.body.appendChild(dragClone);
+      src.classList.add('dragging');
+      dropTargets(drag.kind).forEach((t) => t.classList.add('droptarget'));
+      vib(15);
+    }
+    dragClone.style.transform = `translate(${e.clientX - drag.dx}px,${e.clientY - drag.dy}px) rotate(${Math.max(-8, Math.min(8, (e.clientX - drag.x) / 12))}deg)`;
+  });
+  function dropOn(e) {
+    const under = document.elementsFromPoint(e.clientX, e.clientY).filter((n) => n !== dragClone);
+    const ownCard = under.map((n) => n.closest && n.closest('#me [data-cid]')).find(Boolean);
+    const onHand = under.some((n) => n.closest && n.closest('#me'));
+    const onDiscard = under.some((n) => n.closest && n.closest('#discardPile'));
+    const k = drag.kind;
+    if (k === 'pile') { if (ownCard) drawNow(Number(ownCard.dataset.cid)); else if (onHand) drawNow(); else return false; return true; }
+    if (k === 'take') { if (ownCard) takeNow(Number(ownCard.dataset.cid)); else if (onHand) takeNow(); else return false; return true; }
+    if (k === 'drawn') {
+      if (ownCard) { send({ t: 'swap', cardId: Number(ownCard.dataset.cid) }); setMode(null); return true; }
+      if (onDiscard) { if (S.drawnFrom === 'discard') toast('Você pegou do descarte: troque por uma carta sua.', 'bad'); else send({ t: 'discard' }); return true; }
+      return false;
+    }
+    if (k === 'cutcard') { if (onDiscard) { send({ t: 'cut', cardId: drag.id }); return true; } return false; }
+    return false;
+  }
+  document.addEventListener('pointerup', (e) => {
+    if (!drag || e.pointerId !== drag.pid) return;
+    const d = drag;
+    if (!d.started) { endDrag(); onActivate({ target: d.target, button: 0 }); return; }  // foi só um toque
+    const ok = dropOn(e);
+    if (!ok && dragClone) { // volta para o lugar
+      const c = dragClone; c.style.transition = 'transform .2s'; c.style.opacity = '.0';
+      setTimeout(() => c.remove(), 220); dragClone = null;
+    }
+    endDrag();
+  });
+  document.addEventListener('pointercancel', () => { if (drag) endDrag(); });
+
   function onActivate(e) {
     const cardEl = e.target.closest('[data-cid]');
     if (cardEl) return clickCard(Number(cardEl.dataset.cid), cardEl.dataset.owner);
@@ -613,18 +716,8 @@
       case 'start': send({ t: 'start' }); break;
       case 'startextra': send({ t: 'start', extra: true }); break;
       case 'ready': for (const k of Object.keys(reveals)) if (reveals[k].until === Infinity) delete reveals[k]; send({ t: 'ready' }); render(); break;
-      case 'draw': {
-        const wait = lockUntil - Date.now();   // clicou durante a janela de corte: compra assim que liberar
-        if (wait > 0) setTimeout(() => { if (S && S.turn === S.you && S.sub === 'draw') send({ t: 'draw' }); }, wait + 40);
-        else send({ t: 'draw' });
-        break;
-      }
-      case 'takediscard': {
-        const wait = lockUntil - Date.now();
-        if (wait > 0) setTimeout(() => { if (S && S.turn === S.you && S.sub === 'draw') send({ t: 'takeDiscard' }); }, wait + 40);
-        else send({ t: 'takeDiscard' });
-        break;
-      }
+      case 'draw': drawNow(); break;
+      case 'takediscard': takeNow(); break;
       case 'discard': send({ t: 'discard' }); break;
       case 'swapmode': setMode(mode === 'swap' ? null : 'swap'); break;
       case 'skip': send({ t: 'skip' }); break;

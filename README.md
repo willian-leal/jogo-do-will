@@ -77,3 +77,11 @@ Observação: as salas ficam em memória; reiniciar o servidor encerra as partid
 - **Pedir revanche:** quem não é anfitrião vê o botão na tela de resultado e o pedido aparece para a mesa.
 - **Conexão mais firme:** batimento a cada 20 s (também evita que o serviço gratuito hiberne durante a partida), reconexão com espera crescente e reconexão imediata ao voltar para a aba.
 - **Aviso de vez:** se a aba estiver em segundo plano (ex.: você foi ao WhatsApp), o título vira "🔔 Sua vez!" e o celular vibra.
+
+## Novidades da versão 9
+
+- **Arrastar e soltar** (além do toque, que continua funcionando):
+  - arraste a pilha de **compras** ou o topo do **descarte** até sua mão para pegar a carta; solte direto **sobre uma carta sua** para já trocar;
+  - arraste a **carta comprada** sobre uma carta sua (trocar) ou sobre o descarte (descartar);
+  - com o corte aberto, arraste uma carta sua até o descarte para **cortar**.
+  Os destinos válidos ficam destacados e, se soltar num lugar inválido, a carta volta.

@@ -32,12 +32,23 @@ server.listen(0, async () => {
     await click('#me .card:nth-child(1)'); await click('#me .card:nth-child(2)'); await sleep(200);
     await click('[data-act=ready]');
     // joga: compra, descarta; encerra no 4º turno
-    let turns = 0, tookDiscard = 0; const t0 = Date.now();
+    let turns = 0, tookDiscard = 0, dragged = 0; const t0 = Date.now();
     while (Date.now() - t0 < 60000) {
       const st = await p.evaluate(() => ({ act: [...document.querySelectorAll('#actions [data-act]')].map((e) => e.dataset.act), ended: !document.querySelector('#overlay').hidden && !!document.querySelector('#overlay .trophy') }));
       if (st.ended) break;
       const forced = await p.evaluate(() => /pegou do descarte/.test(document.querySelector('#msg').textContent) && !document.querySelector('#actions [data-act=discard]'));
       if (forced) { tookDiscard++; await click('#me .card:nth-child(3)'); await sleep(200); continue; }
+      if (st.act.includes('draw') && turns >= 1 && tookDiscard && !dragged) {
+        const pos = await p.evaluate(() => { const r = (s) => { const q = document.querySelector(s).getBoundingClientRect(); return { x: q.x + q.width / 2, y: q.y + q.height / 2 }; }; return { a: r('#drawPile .card'), b: r('#me .card:nth-child(2)') }; });
+        await p.mouse.move(pos.a.x, pos.a.y); await p.mouse.down();
+        for (let i = 1; i <= 8; i++) await p.mouse.move(pos.a.x + (pos.b.x - pos.a.x) * i / 8, pos.a.y + (pos.b.y - pos.a.y) * i / 8);
+        assert(await p.$('.dragclone'), 'arrastar deveria criar a carta fantasma');
+        await p.mouse.up(); dragged++;
+        const t1 = Date.now(); let passed = false;
+        while (Date.now() - t1 < 8000) { await sleep(200); const a = await p.evaluate(() => [...document.querySelectorAll('#actions [data-act]')].map((e) => e.dataset.act)); if (!a.includes('draw') && !a.includes('discard') && !a.includes('takediscard')) { passed = true; break; } }
+        assert(passed, 'arrastar a pilha sobre uma carta sua deveria comprar e trocar');
+        continue;
+      }
       if (st.act.includes('draw') && turns >= 1 && !tookDiscard && st.act.includes('takediscard')) { await click('#actions [data-act=takediscard]'); await sleep(2600); continue; }
       if (st.act.includes('draw')) { turns++; if (turns > 3 && st.act.includes('end')) await click('#actions [data-act=end]'); else await click('#actions [data-act=draw]'); }
       else if (st.act.includes('discard')) await click('#actions [data-act=discard]');
@@ -45,6 +56,7 @@ server.listen(0, async () => {
       await sleep(150);
     }
     assert(await p.$('#overlay .trophy'), 'tela de resultado deveria aparecer');
+    assert(dragged >= 1, 'deveria ter testado o arrastar');
     assert(tookDiscard >= 1, 'deveria ter pego do descarte e trocado (fluxo forçado)');
     const stats = JSON.parse(await p.evaluate(() => localStorage.getItem('will_stats')));
     assert(stats && stats.games === 1 && stats.rounds === 1, 'estatísticas locais registradas: ' + JSON.stringify(stats));

@@ -197,3 +197,12 @@ html.rm *,html.rm *::before,html.rm *::after{animation:none!important;transition
 .emojis .phrases{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;width:100%}
 .emojis .phrases button{font-size:.9rem;font-weight:700;padding:0 12px;color:#fff}
 .bubble-text{background:#fff;color:#111;border-radius:14px;padding:4px 10px;font-weight:800;font-size:1rem!important;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.35)}
+
+/* arrastar e soltar */
+#drawPile,#discardPile,#drawnPile .card,.card.cutready{touch-action:none}
+#drawPile.drawable .card,#discardPile.drawable .card,#drawnPile .card{cursor:grab}
+.card.dragging{opacity:.3}
+.dragclone{box-shadow:0 14px 30px rgba(0,0,0,.55);cursor:grabbing;will-change:transform}
+.droptarget{outline:2px dashed #FFD54A;outline-offset:3px;border-radius:12px}
+#me.droptarget{outline-offset:-4px}
+html.hc .droptarget{outline-width:3px}
