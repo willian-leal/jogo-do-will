@@ -102,6 +102,15 @@ function mk(speed) {
     assert(Bot.TRAITS.includes(room.addPlayer({ name: 'B', bot: true }).trait));
     room.destroy();
   }
+  // frases rápidas: aceita as da lista, ignora texto livre
+  {
+    const { room, ps } = mk(0.01);
+    const seen = []; ps[1].send = (m) => { if (m.t === 'fx') seen.push(...m.list); };
+    room.react(ps[0], 'Revanche?'); room.lastReact = {}; room.react(ps[0], 'texto livre qualquer');
+    assert(seen.some((f) => f.k === 'react' && f.emoji === 'Revanche?'), 'frase pronta chega aos outros');
+    assert(!seen.some((f) => f.emoji === 'texto livre qualquer'), 'texto livre é ignorado');
+    room.destroy();
+  }
   console.log('OK: extras (relógio, configurações, reações, vitórias).');
   process.exit(0);
 })().catch((e) => { console.error('FALHOU', e); process.exit(1); });

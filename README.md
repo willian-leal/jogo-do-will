@@ -70,3 +70,10 @@ Observação: as salas ficam em memória; reiniciar o servidor encerra as partid
 ## Novidades da versão 7
 
 - **Pegar do descarte:** na sua vez, toque na pilha de descarte (ou no botão "Pegar do descarte") para levar a carta do topo. Você precisa trocá-la por uma das suas. Bots também usam essa opção.
+
+## Novidades da versão 8
+
+- **Frases rápidas** (Boa!, Quase!, Que sorte!, Rápido!, Calma…, Revanche?) junto dos emojis.
+- **Pedir revanche:** quem não é anfitrião vê o botão na tela de resultado e o pedido aparece para a mesa.
+- **Conexão mais firme:** batimento a cada 20 s (também evita que o serviço gratuito hiberne durante a partida), reconexão com espera crescente e reconexão imediata ao voltar para a aba.
+- **Aviso de vez:** se a aba estiver em segundo plano (ex.: você foi ao WhatsApp), o título vira "🔔 Sua vez!" e o celular vibra.

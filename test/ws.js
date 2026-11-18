@@ -5,6 +5,12 @@ const assert = require('assert');
 const WebSocket = require('ws');
 const { server } = require('../server');
 
+function pingTest(port, cb) {
+  const s = new WebSocket(`ws://localhost:${port}`);
+  s.on('open', () => s.send('{"t":"ping"}'));
+  s.on('message', (raw) => { if (JSON.parse(raw).t === 'pong') { cb(true); s.close(); } });
+  setTimeout(() => cb(false), 2000);
+}
 function burstTest(port, cb) {
   const s = new WebSocket(`ws://localhost:${port}`);
   s.on('open', () => { for (let i = 0; i < 400; i++) s.send(JSON.stringify({ t: 'create', name: 'Spam' + i })); });
@@ -66,6 +72,7 @@ server.listen(0, async () => {
     if (S.phase === 'ended') {
       assert(S.result.rows.length === 3);
       assert(revealed >= 2, 'esperava 2 reveals de peek'); assert(errors.some((e) => /já olhou duas/.test(e)), 'terceira espiada deveria ser recusada');
+      pingTest(port, (ok) => { if (!ok) done(false, 'ping sem pong'); });
       burstTest(port, (ok) => { if (!ok) done(false, 'servidor não respondeu após rajada'); });
       done(true, `partida terminou (${S.result.reason}); reveals=${revealed}; erros tolerados=${errors.length}`);
     }

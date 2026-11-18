@@ -193,3 +193,7 @@ html.hc .card.back{border-color:#fff}
 html.hc .btn:not(.primary):not(.cut){border-color:#fff}
 html.rm *,html.rm *::before,html.rm *::after{animation:none!important;transition:none!important}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+.emojis .phrases{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;width:100%}
+.emojis .phrases button{font-size:.9rem;font-weight:700;padding:0 12px;color:#fff}
+.bubble-text{background:#fff;color:#111;border-radius:14px;padding:4px 10px;font-weight:800;font-size:1rem!important;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.35)}

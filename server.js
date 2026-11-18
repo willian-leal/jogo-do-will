@@ -48,6 +48,7 @@ function attach(conn, room, p) {
 
 function handle(conn, m) {
   const send = (msg) => conn.ws.readyState === 1 && conn.ws.send(JSON.stringify(msg));
+  if (m.t === 'ping') return send({ t: 'pong' }); // batimento do cliente: mantém a conexão e o serviço ativos
   if (m.t === 'create') {
     if (rooms.size >= MAX_ROOMS) return send({ t: 'error', msg: 'O servidor está cheio no momento. Tente de novo em instantes.' });
     const room = new Room(newCode(), { speed: SPEED });

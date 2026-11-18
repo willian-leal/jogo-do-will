@@ -93,11 +93,13 @@
   const vib = (p) => { if (!muted && navigator.vibrate) { try { navigator.vibrate(p); } catch (_) { /* ignore */ } } };
   document.addEventListener('pointerdown', () => ac(), { once: true });
 
+  const BASE_TITLE = document.title;
   /* ------------------------------- rede ---------------------------------- */
   function connect() {
     const proto = location.protocol === 'https:' ? 'wss' : 'ws';
     ws = new WebSocket(`${proto}://${location.host}`);
     ws.onopen = () => {
+      retry = 0;
       const tok = localStorage.getItem('will_token');
       if (tok) send({ t: 'resume', token: tok });
     };
@@ -105,8 +107,21 @@
       let m; try { m = JSON.parse(ev.data); } catch (_) { return; }
       onMsg(m);
     };
-    ws.onclose = () => { toast('Conexão perdida. Reconectando…', 'bad'); setTimeout(connect, 1500); };
+    ws.onclose = () => {
+      toast('Conexão perdida. Reconectando…', 'bad');
+      clearTimeout(retryTimer);
+      retryTimer = setTimeout(connect, Math.min(8000, 1000 * Math.pow(2, retry++)));
+    };
   }
+  let retry = 0, retryTimer = null;
+  // batimento: mantém a conexão viva em proxies e evita que o serviço hiberne durante a partida
+  setInterval(() => { if (ws && ws.readyState === 1) ws.send('{"t":"ping"}'); }, 20000);
+  // ao voltar para a aba (ex.: depois do WhatsApp), reconecta na hora se caiu
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) return;
+    document.title = BASE_TITLE;
+    if (!ws || ws.readyState > 1) { clearTimeout(retryTimer); retry = 0; connect(); }
+  });
   function send(m) { if (ws && ws.readyState === 1) ws.send(JSON.stringify(m)); else toast('Sem conexão com o servidor.', 'bad'); }
 
   function onMsg(m) {
@@ -124,7 +139,7 @@
       LOCK_FULL = m.lockFull || 2200;
       prevTurn = m.turn; prevPhase = m.phase;
       turnEnd = m.turnMs ? Date.now() + m.turnMs : 0;
-      if (m.phase === 'play' && m.turn === m.you && wasTurn !== m.you) { SFX.turn(); vib(70); }
+      if (m.phase === 'play' && m.turn === m.you && wasTurn !== m.you) { SFX.turn(); vib(70); if (document.hidden) document.title = '🔔 Sua vez! · ' + BASE_TITLE; }
       if (m.phase === 'ended' && wasPhase !== 'ended' && m.result) {
         const mine = m.result.rows.find((x) => x.id === m.you), sr = m.result.series;
         if (mine) bumpStats((s) => {
@@ -372,7 +387,7 @@
       ${multi ? `<div class="rank"><b>Classificação</b>${sr.ranking.map((x, i) => `<div class="${sr.winners.includes(x.id) && sr.done ? 'lead' : ''}"><span>${i + 1}. ${esc(x.name)}</span><span>${x.total} pts</span></div>`).join('')}</div>` : ''}
       ${r.tie && !multi ? '<p>Critério 1 (menos cartas) não desempatou — rodada extra entre os empatados.</p>' : ''}
       <div class="row">
-        ${host ? `<button class="btn primary" data-act="start">${nextLabel}</button>` : '<span>Aguardando o anfitrião…</span>'}
+        ${host ? `<button class="btn primary" data-act="start">${nextLabel}</button>` : '<span>Aguardando o anfitrião…</span><button class="btn" data-act="rematch">Pedir revanche</button>'}
         ${host && r.tie && !multi ? '<button class="btn" data-act="startextra">Rodada extra (só os empatados)</button>' : ''}
         ${host && !(multi && !sr.done) ? '<button class="btn" data-act="addbot">+ Bot</button>' : ''}
         <button class="btn" data-act="closeoverlay">Ver mesa</button>
@@ -468,7 +483,8 @@
     const r = box.getBoundingClientRect();
     const el = document.createElement('div');
     el.textContent = emoji;
-    el.style.cssText = `position:fixed;left:${r.left + r.width / 2 - 16}px;top:${r.top + 4}px;font-size:2rem;z-index:40;pointer-events:none`;
+    if (emoji.length > 2) el.className = 'bubble-text';
+    el.style.cssText = `position:fixed;left:${r.left + r.width / 2 - (emoji.length > 2 ? 34 : 16)}px;top:${r.top + 4}px;font-size:2rem;z-index:40;pointer-events:none`;
     document.body.appendChild(el);
     el.animate([{ transform: 'translateY(0) scale(.6)', opacity: 0 }, { transform: 'translateY(-26px) scale(1.2)', opacity: 1, offset: .25 }, { transform: 'translateY(-70px) scale(1)', opacity: 0 }], { duration: 1600, easing: 'ease-out' }).onfinish = () => el.remove();
   }
@@ -575,6 +591,7 @@
       case 'mute': muted = !muted; localStorage.setItem('will_mute', muted ? '1' : '0'); if (!muted) SFX.react(); render(); break;
       case 'emojitoggle': { const e = $('#emojis'); e.hidden = !e.hidden; break; }
       case 'react': send({ t: 'react', emoji: el.dataset.e }); break;
+      case 'rematch': send({ t: 'react', emoji: 'Revanche?' }); toast('Pedido de revanche enviado!', 'good'); break;
       case 'closeoverlay': if (S && S.phase === 'ended') dismissedResult = S.gameNo; closeOverlay(); break;
       case 'showresult': dismissedResult = null; renderResult(); break;
       case 'copylink': {

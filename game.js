@@ -267,7 +267,7 @@ class Room {
   }
   seriesInProgress() { return this.phase === 'ended' && this.result && this.result.series && !this.result.series.done; }
   react(p, emoji) {
-    if (!['👍', '😂', '😮', '😡', '👏', '🤔', '🔥', '😅'].includes(emoji)) return;
+    if (!['👍', '😂', '😮', '😡', '👏', '🤔', '🔥', '😅', 'Boa!', 'Rápido!', 'Revanche?', 'Calma…', 'Que sorte!', 'Quase!'].includes(emoji)) return;
     const now = Date.now();
     if (now - (this.lastReact[p.id] || 0) < 700) return;
     this.lastReact[p.id] = now;
