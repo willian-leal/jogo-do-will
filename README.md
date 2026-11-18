@@ -47,7 +47,7 @@ Observação: as salas ficam em memória; reiniciar o servidor encerra as partid
 - `test/` — `rules.js`, `sim.js`, `ws.js`.
 
 ## Decisões de regra (pontos que o manual deixa em aberto)
-- **Turno:** comprar e então descartar a carta comprada **ou** trocá-la por uma da mão (a que sai vai para o descarte, revelada).
+- **Turno:** comprar da pilha **ou** pegar o topo do descarte. Da pilha: descartar a carta ou trocá-la por uma da mão. Do descarte: é obrigatório trocar por uma da mão (a que sai vai para o descarte, revelada). Pegar do descarte também respeita a janela de corte e a fecha.
 - **Janela de corte:** abre a cada descarte e fecha quando alguém corta ou quando o próximo jogador compra. O próximo jogador só pode comprar ~2 s depois do descarte, para dar tempo de reação.
 - **"Mesmo valor":** igual em pontos — Rei preto (13) só corta Rei preto; Rei vermelho (0) só corta Rei vermelho.
 - **Cortes não ativam poderes** (10, Q, J só valem em descarte de turno). Quem corta pode esvaziar a mão e encerrar a partida.
@@ -66,3 +66,7 @@ Observação: as salas ficam em memória; reiniciar o servidor encerra as partid
 - **Personalidades dos bots**: equilibrado, afobado e cauteloso.
 - **Robustez do servidor**: limite de mensagens por conexão e limite de salas (`MAX_ROOMS`, padrão 300).
 - **Teste de interface** (`test/ui.js`, usa puppeteer-core e Chrome; é ignorado se não houver Chrome).
+
+## Novidades da versão 7
+
+- **Pegar do descarte:** na sua vez, toque na pilha de descarte (ou no botão "Pegar do descarte") para levar a carta do topo. Você precisa trocá-la por uma das suas. Bots também usam essa opção.

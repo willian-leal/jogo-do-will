@@ -32,16 +32,20 @@ server.listen(0, async () => {
     await click('#me .card:nth-child(1)'); await click('#me .card:nth-child(2)'); await sleep(200);
     await click('[data-act=ready]');
     // joga: compra, descarta; encerra no 4º turno
-    let turns = 0; const t0 = Date.now();
+    let turns = 0, tookDiscard = 0; const t0 = Date.now();
     while (Date.now() - t0 < 60000) {
       const st = await p.evaluate(() => ({ act: [...document.querySelectorAll('#actions [data-act]')].map((e) => e.dataset.act), ended: !document.querySelector('#overlay').hidden && !!document.querySelector('#overlay .trophy') }));
       if (st.ended) break;
+      const forced = await p.evaluate(() => /pegou do descarte/.test(document.querySelector('#msg').textContent) && !document.querySelector('#actions [data-act=discard]'));
+      if (forced) { tookDiscard++; await click('#me .card:nth-child(3)'); await sleep(200); continue; }
+      if (st.act.includes('draw') && turns >= 1 && !tookDiscard && st.act.includes('takediscard')) { await click('#actions [data-act=takediscard]'); await sleep(2600); continue; }
       if (st.act.includes('draw')) { turns++; if (turns > 3 && st.act.includes('end')) await click('#actions [data-act=end]'); else await click('#actions [data-act=draw]'); }
       else if (st.act.includes('discard')) await click('#actions [data-act=discard]');
       else if (st.act.includes('skip')) await click('#actions [data-act=skip]');
       await sleep(150);
     }
     assert(await p.$('#overlay .trophy'), 'tela de resultado deveria aparecer');
+    assert(tookDiscard >= 1, 'deveria ter pego do descarte e trocado (fluxo forçado)');
     const stats = JSON.parse(await p.evaluate(() => localStorage.getItem('will_stats')));
     assert(stats && stats.games === 1 && stats.rounds === 1, 'estatísticas locais registradas: ' + JSON.stringify(stats));
     // acessibilidade

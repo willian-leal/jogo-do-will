@@ -183,4 +183,41 @@ assert.strictEqual(points({ rank: '10', suit: 'D' }), 10);
   room.lockUntil = 0; room.doDraw(ps[1].id);
   assert(room.draw.length > 0); room.checkInvariant();
 }
-console.log('OK: regras do manual (11 grupos de verificações).');
+
+// 12. pegar o topo do descarte (em vez de comprar da pilha)
+{
+  const { room, ps } = setup(3);
+  throws(() => room.takeDiscard(ps[0].id), /descarte/i);                  // descarte vazio
+  stackDraw(room, '5', 'H'); room.doDraw(ps[0].id); room.discardDrawn(ps[0].id);   // P0 descarta 5♥
+  assert.strictEqual(room.turnIdx, 1); assert(room.cutWindow);
+  throws(() => room.takeDiscard(ps[1].id), /Calma/);                      // respeita a janela de corte
+  room.lockUntil = 0;
+  throws(() => room.takeDiscard(ps[2].id), /inválida|vez/i);              // só quem está na vez
+  const before = room.draw.length, topId = room.discard[room.discard.length - 1];
+  room.takeDiscard(ps[1].id);
+  assert.strictEqual(room.draw.length, before);                           // pilha de compra intacta
+  assert.strictEqual(ps[1].drawn, topId); assert.strictEqual(ps[1].drawnFrom, 'discard');
+  assert.strictEqual(room.cutWindow, null);                               // fecha a janela de corte
+  assert.strictEqual(room.discard.length, 0);
+  assert.strictEqual(room.view(ps[1]).drawn.rank, '5'); assert.strictEqual(room.view(ps[1]).drawnFrom, 'discard');
+  assert.strictEqual(room.view(ps[0]).drawn, null);
+  throws(() => room.discardDrawn(ps[1].id), /troque/i);                   // não pode devolver
+  give(room, ps[1], 0, 'Q', 'S');
+  const out = ps[1].hand[0];
+  room.swap(ps[1].id, out);
+  assert.strictEqual(ps[1].drawnFrom, null);
+  assert.strictEqual(room.discard[room.discard.length - 1], out);         // a trocada vai para o descarte
+  assert.strictEqual(room.sub, 'power'); assert.strictEqual(room.pending.type, 'Q');  // e o poder da Dama dispara
+  room.checkInvariant();
+}
+{
+  // piloto automático nunca trava com carta do descarte
+  const { room, ps } = setup(2);
+  stackDraw(room, '9', 'C'); room.doDraw(ps[0].id); room.discardDrawn(ps[0].id);
+  room.lockUntil = 0; room.takeDiscard(ps[1].id);
+  const Bot = require('../bot');
+  const d = Bot.chooseAction(room, ps[1]);
+  assert.strictEqual(d.type, 'swap'); assert(ps[1].hand.includes(d.cardId));
+  room.swap(ps[1].id, d.cardId); room.checkInvariant();
+}
+console.log('OK: regras do manual (12 grupos de verificações).');

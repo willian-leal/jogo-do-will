@@ -90,7 +90,7 @@ class Room {
     while (this.players.some((p) => p.name === nm)) nm = `${base} ${k++}`;
     const p = {
       id: rid(4), token: rid(12), name: nm, bot, level: Bot.LEVELS.includes(level) ? level : 'medio', trait: bot ? Bot.randomTrait() : 'equilibrado', connected: bot, send: () => {}, conn: null,
-      hand: [], drawn: null, peeksLeft: 0, peeked: new Set(), ready: false, inGame: false, memory: {}, turns: 0,
+      hand: [], drawn: null, drawnFrom: null, peeksLeft: 0, peeked: new Set(), ready: false, inGame: false, memory: {}, turns: 0,
     };
     this.players.push(p);
     if (!bot && !this.hostId) this.hostId = p.id;
@@ -172,7 +172,7 @@ class Room {
     this.draw = deck.map((c) => c.id);
     this.discard = [];
     for (const p of this.players) {
-      p.hand = []; p.drawn = null; p.memory = {}; p.turns = 0; p.ready = false; p.peeksLeft = 0; p.peeked = new Set();
+      p.hand = []; p.drawn = null; p.drawnFrom = null; p.memory = {}; p.turns = 0; p.ready = false; p.peeksLeft = 0; p.peeked = new Set();
       p.inGame = parts.includes(p);
     }
     for (let i = 0; i < 4; i++) for (const p of parts) p.hand.push(this.draw.pop());
@@ -301,7 +301,7 @@ class Room {
     if (wait > 0) fail('Calma! A janela de corte ainda está aberta.');
     const id = this.drawCard();
     if (id == null) return this.endGame('deck', pid);
-    p.drawn = id;
+    p.drawn = id; p.drawnFrom = 'pile';
     p.memory[id] = points(this.cards.get(id));
     this.sub = 'action';
     this.cutWindow = null; // comprar fecha a janela de corte
@@ -309,9 +309,24 @@ class Room {
     this.fx({ k: 'draw', by: p.id });
     this.change();
   }
+  takeDiscard(pid) {
+    const p = this.need(pid, 'draw');
+    const wait = this.lockUntil - Date.now();
+    if (wait > 0) fail('Calma! A janela de corte ainda está aberta.');
+    if (!this.discard.length) fail('Não há carta no descarte.');
+    const id = this.discard.pop(), c = this.cards.get(id);
+    p.drawn = id; p.drawnFrom = 'discard';
+    p.memory[id] = points(c);
+    this.sub = 'action';
+    this.cutWindow = null;
+    this.logMsg(`${p.name} pegou ${this.label(c)} do descarte.`);
+    this.fx({ k: 'draw', by: p.id, from: 'discard', card: pub(c) });
+    this.change();
+  }
   discardDrawn(pid) {
     const p = this.need(pid, 'action');
-    const id = p.drawn; p.drawn = null;
+    if (p.drawnFrom === 'discard') fail('Você pegou do descarte: troque por uma carta da sua mão.');
+    const id = p.drawn; p.drawn = null; p.drawnFrom = null;
     this.logMsg(`${p.name} descartou a carta comprada.`);
     this.afterDiscard(p, id, 'drawn');
   }
@@ -320,7 +335,7 @@ class Room {
     const idx = p.hand.indexOf(cardId);
     if (idx < 0) fail('Escolha uma das suas cartas para trocar.');
     const old = p.hand[idx];
-    p.hand[idx] = p.drawn; p.drawn = null;
+    p.hand[idx] = p.drawn; p.drawn = null; p.drawnFrom = null;
     this.logMsg(`${p.name} trocou a carta comprada por uma da mão.`);
     this.afterDiscard(p, old, 'swap', p.hand[idx]);
   }
@@ -432,7 +447,7 @@ class Room {
       const w = this.seriesRounds === 1 ? (tied.length === 1 ? tied[0].id : null) : (sWin.length === 1 ? sWin[0] : null);
       if (w) this.wins[w] = (this.wins[w] || 0) + 1;
     }
-    for (const p of this.players) { p.drawn = null; p.ready = false; }
+    for (const p of this.players) { p.drawn = null; p.drawnFrom = null; p.ready = false; }
     if (this.seriesRounds > 1) {
       this.logMsg(done ? (sWin.length > 1 ? 'Campeonato empatado!' : `${this.byId(sWin[0]).name} é o campeão com ${ranking[0].total} ponto(s)!`)
         : `Fim da rodada ${this.roundNo} de ${this.seriesRounds}: ${tied.length > 1 ? 'empate' : best.name + ' venceu a rodada'}.`);
@@ -460,6 +475,7 @@ class Room {
         case 'peek': this.peek(p.id, m.cardId | 0); break;
         case 'ready': this.ready(p.id); break;
         case 'draw': this.doDraw(p.id); break;
+        case 'takeDiscard': this.takeDiscard(p.id); break;
         case 'discard': this.discardDrawn(p.id); break;
         case 'swap': this.swap(p.id, m.cardId | 0); break;
         case 'power': this.power(p.id, (m.targets || []).map((x) => x | 0)); break;
@@ -495,6 +511,7 @@ class Room {
       sub: this.phase === 'play' ? this.sub : null,
       drawCount: this.draw.length, discardCount: this.discard.length,
       discardTop: top ? pub(top) : null,
+      drawnFrom: cur && cur.id === v.id && this.sub === 'action' ? cur.drawnFrom : null,
       drawn: cur && cur.id === v.id && this.sub === 'action' && cur.drawn != null ? pub(this.cards.get(cur.drawn)) : null,
       power: this.pending ? { type: this.pending.type, by: this.pending.by } : null,
       cutOpen: !!this.cutWindow,
@@ -569,7 +586,11 @@ class Room {
       const wait = Math.max(rand(900, 1800) * T + extra, (this.lockUntil - Date.now()) / this.speed + 250);
       this.after(wait, () => {
         if (!still()) return;
-        run(() => (cur.bot && Bot.shouldEnd(cur) ? this.endVoluntary(cur.id) : this.doDraw(cur.id)));
+        run(() => {
+          if (cur.bot && Bot.shouldEnd(cur)) return this.endVoluntary(cur.id);
+          if (cur.bot && Bot.wantDiscard(this, cur)) return this.takeDiscard(cur.id);
+          return this.doDraw(cur.id);
+        });
       });
     } else if (this.sub === 'action') {
       this.after(rand(900, 1700) * T + extra, () => {

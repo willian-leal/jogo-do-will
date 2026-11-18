@@ -61,9 +61,31 @@ function shouldEnd(p) {
   return false;
 }
 
+// vale a pena pegar o topo do descarte (carta pública) em vez de arriscar a pilha?
+function wantDiscard(room, p) {
+  if (!room.discard.length) return false;
+  const P = params(p);
+  const v = pts(room, room.discard[room.discard.length - 1]);
+  const k = known(p), u = unknown(p);
+  const hv = k.length ? Math.max(...k.map((id) => p.memory[id])) : -1;
+  let ok = false;
+  if (v <= 2) ok = (hv > v + 1) || u.length > 0;
+  else if (hv >= v + P.margin + 1) ok = true;
+  else if (u.length && v <= Math.min(P.blind, 4)) ok = true;
+  return ok && Math.random() < (p.level === 'facil' ? 0.4 : 0.85);
+}
+
 function chooseAction(room, p) {
   const P = params(p);
   const drawnId = p.drawn;
+  if (p.drawnFrom === 'discard') {
+    // veio do descarte: é obrigatório trocar por uma carta da mão
+    const vv = pts(room, drawnId); p.memory[drawnId] = vv;
+    const kk = known(p).filter((id) => id !== drawnId).sort((a, b) => p.memory[b] - p.memory[a]);
+    if (kk.length && p.memory[kk[0]] > vv) return { type: 'swap', cardId: kk[0] };
+    const uu = unknown(p).filter((id) => id !== drawnId);
+    return { type: 'swap', cardId: pick(uu.length ? uu : p.hand) };
+  }
   const v = pts(room, drawnId);
   p.memory[drawnId] = v;
   const k = known(p).filter((id) => id !== drawnId);
@@ -102,4 +124,4 @@ function choosePower(room, p, type) {
   return { skip: true };
 }
 
-module.exports = { TRAITS, randomTrait, LEVELS, LEVEL_NAMES, params, cutCandidate, shouldEnd, chooseAction, choosePower };
+module.exports = { wantDiscard, TRAITS, randomTrait, LEVELS, LEVEL_NAMES, params, cutCandidate, shouldEnd, chooseAction, choosePower };
