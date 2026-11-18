@@ -32,6 +32,7 @@
   const STATS0 = { games: 0, wins: 0, rounds: 0, cutsOk: 0, cutsBad: 0, best: null };
   const bumpStats = (fn) => { const s = loadJSON('will_stats', STATS0); fn(s); try { localStorage.setItem('will_stats', JSON.stringify(s)); } catch (_) { /* ignore */ } };
   const a11y = loadJSON('will_a11y', { hc: false, btns: false, rm: window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches });
+  const narrOn = () => (a11y.narr === undefined ? (loadJSON('will_stats', STATS0).games || 0) < 3 : !!a11y.narr);
   function applyA11y() { document.documentElement.classList.toggle('hc', !!a11y.hc); document.documentElement.classList.toggle('rm', !!a11y.rm); }
   applyA11y();
   let seenTips = loadJSON('will_tips', {});
@@ -290,23 +291,21 @@
     /* centro: compra, descarte, carta comprada */
     const canDraw = myTurn && S.sub === 'draw';
     const canDiscard = myTurn && S.sub === 'action' && !!S.drawn && S.drawnFrom !== 'discard';
-    const remain = lockUntil - Date.now();
-    const locked = remain > 0;
     const top = S.discardTop;
     const popCls = top && top.id !== prevTopId ? 'pop' : '';
     prevTopId = top ? top.id : null;
     $('#center').innerHTML = S.phase === 'peek' ? '' : `
       <div class="pile ${canDraw ? 'drawable' : ''}" id="drawPile" ${canDraw ? 'data-act="draw" tabindex="0" role="button" aria-label="Comprar carta"' : ''}>
         <div>Compras (${S.drawCount})</div>${cardHTML({ id: 0 })}
-        ${canDraw ? `<div>${locked ? 'aguarde…' : 'toque para comprar'}</div>` : ''}
+        ${canDraw ? '<div>toque para comprar</div>' : ''}
       </div>
-      <div class="pile ${S.cutOpen ? 'cutopen' : ''} ${(canDraw && top) || canDiscard ? 'drawable' : ''}" id="discardPile" ${canDraw && top ? 'data-act="takediscard" tabindex="0" role="button" aria-label="Pegar a carta do topo do descarte"' : canDiscard ? 'data-act="discard" tabindex="0" role="button" aria-label="Descartar a carta comprada"' : ''}><div>Descarte (${S.discardCount})</div>${top ? discardStackHTML(popCls + (ghostTop.id === top.id && ghostTop.until > Date.now() ? ' ghost' : '')) : '<div class="slot"></div>'}
-        ${canDraw && top && !S.cutOpen ? '<div>toque para pegar</div>' : canDiscard ? '<div>toque para descartar</div>' : ''}
-        ${S.cutOpen ? `<div class="cutlabel">${icon('cut', 14, 2.2)}corte aberto · valor ${top ? top.pts : ''}</div>${remain > 0 ? `<div class="bar"><i style="animation-duration:${LOCK_FULL}ms;animation-delay:-${Math.max(0, LOCK_FULL - remain)}ms"></i></div>` : ''}` : ''}</div>
+      <div class="pile ${(canDraw && top) || canDiscard ? 'drawable' : ''}" id="discardPile" ${canDraw && top ? 'data-act="takediscard" tabindex="0" role="button" aria-label="Pegar a carta do topo do descarte"' : canDiscard ? 'data-act="discard" tabindex="0" role="button" aria-label="Descartar a carta comprada"' : ''}><div>Descarte (${S.discardCount})</div>${top ? discardStackHTML(popCls + (ghostTop.id === top.id && ghostTop.until > Date.now() ? ' ghost' : '')) : '<div class="slot"></div>'}
+        ${canDraw && top ? '<div>toque para pegar</div>' : canDiscard ? '<div>toque para descartar</div>' : ''}
       `;
 
     /* mensagem de status */
     let msg = '', mine = false;
+    const narr = narrOn();
     if (S.phase === 'peek') {
       if (!playing) msg = 'Partida em andamento — você está assistindo.';
       else if (mp.ready) msg = 'Aguardando os outros jogadores memorizarem…';
@@ -315,14 +314,14 @@
       if (!playing) msg = 'Você está assistindo esta rodada.';
       else if (myTurn) {
         mine = true;
-        if (S.sub === 'draw') msg = locked ? 'Sua vez! (a janela de corte ainda está aberta…)' : 'Sua vez: toque ou arraste uma pilha (compras ou descarte), ou encerre a partida.';
+        if (S.sub === 'draw') msg = narr ? 'Sua vez: toque ou arraste uma pilha (compras ou descarte), ou encerre a partida.' : 'Sua vez';
+        else if (S.sub === 'action' && !narr) msg = '';
         else if (S.sub === 'action' && S.drawnFrom === 'discard') msg = 'Você pegou do descarte: toque na carta sua que vai trocar.';
         else if (S.sub === 'action') msg = 'Toque numa carta sua para trocar, ou no descarte para descartar a comprada.';
         else if (S.sub === 'power') msg = `Poder d${powerText[S.power.type]}${S.power.type === 'J' ? ` (${sel.length}/2)` : ''}. Opcional.`;
       } else if (S.sub === 'power' && S.power) msg = `${nameOf(S.power.by)} está decidindo se usa o poder do ${S.power.type === 'Q' ? 'Dama' : S.power.type === 'J' ? 'Valete' : '10'}…`;
-      else msg = `Vez de ${nameOf(S.turn)}.`;
+      else msg = narr ? `Vez de ${nameOf(S.turn)}.` : '';
       if (mode === 'cut') { msg = 'Clique na carta da sua mão que tem o mesmo valor do descarte!'; mine = true; }
-      else if (S.cutOpen && playing && S.discardTop) msg += `  ·  Corte aberto: toque numa carta sua de ${S.discardTop.pts} pt${S.discardTop.pts === 1 ? '' : 's'} para cortar.`;
     } else if (S.phase === 'ended') {
       const r = S.result;
       msg = r.reason === 'empty' ? `${nameOf(r.by)} ficou sem cartas!` : r.reason === 'voluntary' ? `${nameOf(r.by)} encerrou a partida.` : 'Acabaram as cartas.';
@@ -362,7 +361,7 @@
       $('#me').innerHTML = `
         <div class="row five">${mp.hand.map((c) => cardHTML(c, {
           owner: S.you,
-          cls: (mode === 'cut' ? 'cutmode ' : meTargets ? 'clickable ' : S.cutOpen && S.phase === 'play' ? 'cutready ' : '') + (sel.some((s) => s.id === c.id) ? 'selected' : ''),
+          cls: (mode === 'cut' ? 'cutmode ' : meTargets ? 'clickable ' : '') + (sel.some((s) => s.id === c.id) ? 'selected' : ''),
         })).join('')}${S.phase === 'ended' ? '' : (S.drawn
           ? `<div class="handslot has" id="drawnPile" title="${S.drawnFrom === 'discard' ? 'Pegou do descarte: troque por uma carta sua' : 'Toque numa carta sua para trocar ou no descarte para descartar'}">${cardHTML(S.drawn, { cls: 'inhand pop' })}</div>`
           : `<div class="handslot ${S.phase === 'play' ? '' : 'hid'}"></div>`)}</div>
@@ -462,6 +461,7 @@
     $('#overlay').innerHTML = `<div class="modal"><h3>Acessibilidade</h3>
       <label class="chk"><input type="checkbox" data-a11y="hc" ${a11y.hc ? 'checked' : ''}> Alto contraste</label>
       <label class="chk"><input type="checkbox" data-a11y="rm" ${a11y.rm ? 'checked' : ''}> Reduzir animações</label>
+      <label class="chk"><input type="checkbox" data-a11y="narr" ${narrOn() ? 'checked' : ''}> Mostrar narração da jogada no centro da mesa</label>
       <label class="chk"><input type="checkbox" data-a11y="btns" ${a11y.btns ? 'checked' : ''}> Mostrar botões de ação (comprar, descartar, trocar, cortar)</label>
       <p>Por padrão você joga tocando ou arrastando as cartas. Teclado: Tab navega, Enter ou espaço ativa, D compra, C corta, Esc cancela.</p>
       <div class="row"><button class="btn primary" data-act="closeoverlay">Pronto</button></div></div>`;
@@ -587,15 +587,11 @@
   document.addEventListener('click', (e) => { if (e.detail === 0) onActivate(e); }); // acionamento por teclado
   function drawNow(swapId) {
     if (swapId != null) pendingSwap = { id: swapId, until: Date.now() + 7000 };
-    const wait = lockUntil - Date.now();   // clicou durante a janela de corte: compra assim que liberar
-    if (wait > 0) setTimeout(() => { if (S && S.turn === S.you && S.sub === 'draw') send({ t: 'draw' }); }, wait + 40);
-    else send({ t: 'draw' });
+    send({ t: 'draw' });
   }
   function takeNow(swapId) {
     if (swapId != null) pendingSwap = { id: swapId, until: Date.now() + 7000 };
-    const wait = lockUntil - Date.now();
-    if (wait > 0) setTimeout(() => { if (S && S.turn === S.you && S.sub === 'draw') send({ t: 'takeDiscard' }); }, wait + 40);
-    else send({ t: 'takeDiscard' });
+    send({ t: 'takeDiscard' });
   }
   let resultAt = 0;
   let pendingSwap = null;   // troca pedida por arrasto antes de a carta chegar na mão

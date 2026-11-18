@@ -297,28 +297,24 @@ class Room {
 
   doDraw(pid) {
     const p = this.need(pid, 'draw');
-    const wait = this.lockUntil - Date.now();
-    if (wait > 0) fail('Calma! A janela de corte ainda está aberta.');
     const id = this.drawCard();
     if (id == null) return this.endGame('deck', pid);
     p.drawn = id; p.drawnFrom = 'pile';
     p.memory[id] = points(this.cards.get(id));
     this.sub = 'action';
-    this.cutWindow = null; // comprar fecha a janela de corte
+    // comprar da pilha NÃO fecha o corte: vale até alguém descartar outra carta
     this.logMsg(`${p.name} comprou uma carta.`);
     this.fx({ k: 'draw', by: p.id });
     this.change();
   }
   takeDiscard(pid) {
     const p = this.need(pid, 'draw');
-    const wait = this.lockUntil - Date.now();
-    if (wait > 0) fail('Calma! A janela de corte ainda está aberta.');
     if (!this.discard.length) fail('Não há carta no descarte.');
     const id = this.discard.pop(), c = this.cards.get(id);
     p.drawn = id; p.drawnFrom = 'discard';
     p.memory[id] = points(c);
     this.sub = 'action';
-    this.cutWindow = null;
+    this.cutWindow = null; // a carta cortável saiu do topo
     this.logMsg(`${p.name} pegou ${this.label(c)} do descarte.`);
     this.fx({ k: 'draw', by: p.id, from: 'discard', card: pub(c) });
     this.change();
@@ -345,7 +341,6 @@ class Room {
     this.fx({ k: 'discard', by: p.id, via, slot, card: pub(c) });
     this.logMsg(`Descarte: ${this.label(c)}.`);
     this.cutWindow = { value: points(c), sched: false };
-    this.lockUntil = Date.now() + this.LOCK;
     if (c.rank === '10' || c.rank === 'Q' || c.rank === 'J') {
       this.sub = 'power'; this.pending = { type: c.rank, by: p.id };
     } else {
@@ -400,7 +395,7 @@ class Room {
     const p = this.byId(pid);
     if (this.phase !== 'play' || !p || !p.inGame) fail('Não dá para cortar agora.');
     const cw = this.cutWindow;
-    if (!cw) fail('Não há descarte para cortar (alguém já cortou ou a vez já passou).');
+    if (!cw) fail('Não há descarte para cortar (alguém já cortou ou outra carta já foi descartada).');
     const idx = p.hand.indexOf(cardId);
     if (idx < 0) fail('Escolha uma carta da sua mão.');
     const card = this.cards.get(cardId);
@@ -447,7 +442,8 @@ class Room {
       const w = this.seriesRounds === 1 ? (tied.length === 1 ? tied[0].id : null) : (sWin.length === 1 ? sWin[0] : null);
       if (w) this.wins[w] = (this.wins[w] || 0) + 1;
     }
-    for (const p of this.players) { p.drawn = null; p.drawnFrom = null; p.ready = false; }
+    // corte pode encerrar a partida com alguém segurando a carta comprada: ela volta ao fundo da pilha
+    for (const p of this.players) { if (p.drawn != null) this.draw.unshift(p.drawn); p.drawn = null; p.drawnFrom = null; p.ready = false; }
     if (this.seriesRounds > 1) {
       this.logMsg(done ? (sWin.length > 1 ? 'Campeonato empatado!' : `${this.byId(sWin[0]).name} é o campeão com ${ranking[0].total} ponto(s)!`)
         : `Fim da rodada ${this.roundNo} de ${this.seriesRounds}: ${tied.length > 1 ? 'empate' : best.name + ' venceu a rodada'}.`);

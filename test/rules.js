@@ -76,9 +76,26 @@ assert.strictEqual(points({ rank: '10', suit: 'D' }), 10);
   room.cut(ps[0].id, ps[0].hand[0]);
   assert.strictEqual(ps[0].hand.length, 5);                        // 4 + punição
   assert(ps[0].sent.some((m) => m.t === 'toast'));
-  // quem erra pode tentar de novo; corte sem janela é recusado
-  room.lockUntil = 0; room.doDraw(ps[2].id);
-  throws(() => room.cut(ps[0].id, ps[0].hand[0]), /descarte|janela|vez/);
+  // comprar da pilha NÃO fecha o corte: continua valendo até outra carta ser descartada
+  room.doDraw(ps[2].id);
+  assert(room.cutWindow, 'corte segue aberto depois de o próximo comprar');
+  const antes = ps[1].hand.length; give(room, ps[1], 0, '6', 'D');
+  room.cut(ps[1].id, ps[1].hand[0]);                               // corte tardio, já com a vez do outro em andamento
+  assert.strictEqual(ps[1].hand.length, antes - 1);
+  throws(() => room.cut(ps[0].id, ps[0].hand[0]), /descarte|cortou|vez/);   // já cortaram: sem janela
+  room.discardDrawn(ps[2].id);                                      // novo descarte reabre o corte
+  assert(room.cutWindow);
+}
+
+// 4b. corte que zera a mão enquanto o jogador da vez segura a carta comprada: nada se perde
+{
+  const { room, ps } = setup(3);
+  stackDraw(room, '5', 'S'); room.doDraw(ps[0].id); room.discardDrawn(ps[0].id);
+  room.doDraw(ps[1].id);                                                 // P1 segura a comprada
+  room.draw.unshift(...ps[2].hand.splice(1)); give(room, ps[2], 0, '5', 'D');
+  room.cut(ps[2].id, ps[2].hand[0]);
+  assert.strictEqual(room.phase, 'ended');
+  room.checkInvariant();
 }
 
 // 5. Reis: preto != vermelho; mesma cor corta
@@ -190,7 +207,6 @@ assert.strictEqual(points({ rank: '10', suit: 'D' }), 10);
   throws(() => room.takeDiscard(ps[0].id), /descarte/i);                  // descarte vazio
   stackDraw(room, '5', 'H'); room.doDraw(ps[0].id); room.discardDrawn(ps[0].id);   // P0 descarta 5♥
   assert.strictEqual(room.turnIdx, 1); assert(room.cutWindow);
-  throws(() => room.takeDiscard(ps[1].id), /Calma/);                      // respeita a janela de corte
   room.lockUntil = 0;
   throws(() => room.takeDiscard(ps[2].id), /inválida|vez/i);              // só quem está na vez
   const before = room.draw.length, topId = room.discard[room.discard.length - 1];

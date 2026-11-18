@@ -98,3 +98,8 @@ Observação: as salas ficam em memória; reiniciar o servidor encerra as partid
 
 - **Carta na mão de quem joga:** a carta comprada deixa de aparecer no centro. Ela fica ao lado das cartas de quem comprou (no seu espaço tracejado à direita da mão; nos bots, sobreposta à mão deles). Se veio do descarte, todos veem a face; se veio da pilha, só quem comprou vê.
 - **Montinho de descarte:** as últimas cartas descartadas ficam empilhadas, levemente desalinhadas, com a última por cima. O centro da mesa fica sempre igual (só as duas pilhas).
+
+## Novidades da versão 12
+- **Corte livre:** sem espera de 2 s e sem a etiqueta "corte aberto". Qualquer jogador pode cortar, quando quiser, enquanto nenhuma outra carta for descartada no monte (comprar da pilha não fecha o corte; pegar a carta do topo do descarte fecha). Só o primeiro corte certo vale.
+- **Narração opcional:** em Menu → Acessibilidade, "Mostrar narração da jogada no centro da mesa". Padrão: ligada nas 3 primeiras partidas, desligada depois. Com ela desligada ficam só "Sua vez", o aviso dos poderes e os erros.
+- **Correção:** um corte que encerra a partida com alguém segurando a carta comprada fazia a carta sumir (a simulação de 120 partidas pegou); agora ela volta ao fundo da pilha.
