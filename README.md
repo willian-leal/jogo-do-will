@@ -110,3 +110,6 @@ Observação: as salas ficam em memória; reiniciar o servidor encerra as partid
 ## Novidades da versão 14
 - **Cortar durante o próprio poder:** ao descartar um 10 ou Valete com outra igual na mão, dá para cortar sem ser obrigado a usar o poder: arraste a carta até o descarte, ou toque em CORTAR (aparece enquanto o poder está pendente). O poder continua opcional.
 - **Costas das cartas dos adversários** agora mostram o "W", igual às suas e à pilha.
+
+## Novidades da versão 15
+- **Voltar ao início:** no resultado da partida há o botão "Voltar ao início" (e também na mesa depois de fechar o resultado). Sai da sala e volta à tela inicial.

@@ -67,6 +67,11 @@ server.listen(0, async () => {
     await click('[data-act=closeoverlay]'); await click('#menuBtn'); await click('#menu [data-act=a11y]');
     await p.evaluate(() => { const i = document.querySelector('[data-a11y=rm]'); i.checked = true; i.dispatchEvent(new Event('change', { bubbles: true })); });
     assert(await p.evaluate(() => document.documentElement.classList.contains('rm')), 'reduzir animações aplica a classe');
+    // voltar ao início depois do resultado
+    await click('[data-act=closeoverlay]');
+    assert(await p.$('#actions [data-act=leave]'), 'botão Voltar ao início na mesa após o fim');
+    await click('#actions [data-act=leave]'); await sleep(600);
+    assert(await p.evaluate(() => !document.querySelector('#home').hidden && document.querySelector('#overlay').hidden), 'voltou à tela inicial');
     assert.deepStrictEqual(errs, [], 'sem erros de JS');
     console.log('OK: UI no navegador (treino, dicas, teclado/aria, resultado, estatísticas, acessibilidade).');
     await b.close(); process.exit(0);

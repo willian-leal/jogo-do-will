@@ -176,7 +176,7 @@
     } else if (m.t === 'toast') {
       toast(m.msg, m.kind);
     } else if (m.t === 'left') {
-      localStorage.removeItem('will_token'); S = null; history.replaceState(null, '', location.pathname); show('home');
+      localStorage.removeItem('will_token'); S = null; closeOverlay(); history.replaceState(null, '', location.pathname); show('home');
     }
   }
 
@@ -362,7 +362,7 @@
       const ownPower = S.sub === 'power' && S.power && S.power.by === S.you && (S.power.type === '10' || S.power.type === 'J');
       if (S.cutOpen && (a11y.btns || ownPower)) a.push(`<button class="btn cut ${mode === 'cut' ? 'on' : ''}" data-act="cutmode">${icon('cut', 22, 2.2)}CORTAR (C)</button>`);
     }
-    if (S.phase === 'ended') a.push('<button class="btn primary" data-act="showresult">Ver resultado</button>');
+    if (S.phase === 'ended') a.push('<button class="btn primary" data-act="showresult">Ver resultado</button><button class="btn" data-act="leave">Voltar ao início</button>');
     $('#actions').innerHTML = a.join('');
 
     /* minha mão */
@@ -422,6 +422,7 @@
         ${host && r.tie && !multi ? '<button class="btn" data-act="startextra">Rodada extra (só os empatados)</button>' : ''}
         ${host && !(multi && !sr.done) ? '<button class="btn" data-act="addbot">+ Bot</button>' : ''}
         <button class="btn" data-act="closeoverlay">Ver mesa</button>
+        <button class="btn" data-act="leave">Voltar ao início</button>
       </div>
       ${host ? `<div class="stack">${turnSelHTML()}${paceSelHTML()}${roundsSelHTML()}</div>` : ''}</div>`;
     $('#overlay').hidden = false;
