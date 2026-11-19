@@ -126,3 +126,9 @@ Observação: as salas ficam em memória; reiniciar o servidor encerra as partid
 - **Placar do campeonato:** durante um campeonato (3 ou 5 rodadas) aparece uma faixa "Placar" sob o topo, com os pontos acumulados de cada jogador, o líder em dourado.
 - **Mesa compacta no celular:** com 5 ou mais adversários as cartas e as pilhas encolhem para a sua mão caber na tela.
 - Teste de WebSocket ficou robusto contra uma corrida entre o fim do poder e o envio da jogada.
+
+## v19 — Pequenos ajustes
+- Painel de reações fecha sozinho ao enviar uma reação e quando chega a sua vez (não empurra mais a mão para fora da tela).
+- "Encerrar partida" agora pede confirmação com uma janela do próprio jogo (em vez do `confirm()` do navegador).
+- Toque fora de hora não mostra mais o aviso "Ação inválida neste momento".
+- Rótulo da carta: "1 ponto" (singular) para o Ás.

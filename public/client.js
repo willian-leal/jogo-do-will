@@ -174,6 +174,7 @@
       render();
     } else if (m.t === 'error') {
       if (m.code === 'resume') { localStorage.removeItem('will_token'); if (localStorage.getItem('will_away')) { localStorage.removeItem('will_away'); toast('Essa sala não existe mais.', 'bad'); } show('home'); return; }
+      if (m.msg === 'Ação inválida neste momento.') return;   // toque fora de hora: não precisa de aviso
       toast(m.msg, 'bad');
     } else if (m.t === 'toast') {
       toast(m.msg, m.kind);
@@ -226,7 +227,7 @@
     if (o.cls) cls.push(o.cls);
     const fl = flashes[info.id];
     if (fl && fl.until > Date.now()) cls.push(fl.cls);
-    const label = known ? `${known.rank} de ${SUIT_NAMES[known.suit]}, ${known.pts} pontos` : 'carta virada';
+    const label = known ? `${known.rank} de ${SUIT_NAMES[known.suit]}, ${known.pts} ${known.pts === 1 ? 'ponto' : 'pontos'}` : 'carta virada';
     const data = info.id != null && o.owner ? ` data-cid="${info.id}" data-owner="${o.owner}" tabindex="0" role="button" aria-label="${label}"` : (known ? ` role="img" aria-label="${label}"` : '');
     return `<div class="${cls.join(' ')}"${data}>${inner}</div>`;
   }
@@ -294,6 +295,8 @@
     const mp = me();
     const playing = mp && mp.inGame;
     const myTurn = S.phase === 'play' && S.turn === S.you;
+    if (myTurn && !wasMyTurn) $('#emojis').hidden = true;   // o painel de reações não fica na frente da sua jogada
+    wasMyTurn = myTurn;
     const opps = S.players.filter((p) => p.inGame && p.id !== S.you);
     $('#board').classList.toggle('many', opps.length >= 5);
     const specs = !playing ? S.players.filter((p) => p.inGame) : opps;
@@ -415,7 +418,7 @@
     if (!lp.hidden) { lp.innerHTML = S.log.slice().reverse().map((l) => `<div>${esc(l.msg)}</div>`).join(''); }
 
     /* resultado */
-    if (S.phase === 'ended' && dismissedResult !== S.gameNo) renderResult(); else if (S.phase !== 'ended') closeOverlay();
+    if (S.phase === 'ended' && dismissedResult !== S.gameNo) renderResult(); else if (S.phase !== 'ended' && !confirmingEnd) closeOverlay();
   }
 
   function renderResult() {
@@ -449,7 +452,7 @@
       ${host ? `<div class="stack">${turnSelHTML()}${paceSelHTML()}${roundsSelHTML()}</div>` : ''}</div>`;
     $('#overlay').hidden = false;
   }
-  function closeOverlay() { $('#overlay').hidden = true; $('#overlay').innerHTML = ''; }
+  function closeOverlay() { confirmingEnd = false; $('#overlay').hidden = true; $('#overlay').innerHTML = ''; }
 
   function rulesModal() {
     $('#overlay').innerHTML = `<div class="modal"><h3>Regras do Jogo do Will</h3><ul>
@@ -525,6 +528,7 @@
     const an = el.animate([{ transform: 'translate(0,0) scale(.75) rotate(-6deg)', opacity: .9 }, { transform: `translate(${dx}px,${dy}px) scale(1) rotate(0)`, opacity: 1 }], { duration: ms, easing: 'cubic-bezier(.2,.8,.2,1)' });
     an.onfinish = () => el.remove();
   }
+  let wasMyTurn = false, confirmingEnd = false;
   const cutFx = {};   // destaque de quem cortou (verde) ou errou (vermelho) na caixa do jogador
   function markCut(pid, ok) { cutFx[pid] = { until: Date.now() + 1600, ok }; setTimeout(render, 1650); }
   const cutCls = (pid) => { const x = cutFx[pid]; return x && x.until > Date.now() ? (x.ok ? 'cutok' : 'cutbad') : ''; };
@@ -742,7 +746,7 @@
       case 'practice': { const n = $('#nameInput').value.trim() || 'Jogador'; localStorage.setItem('will_name', n); send({ t: 'create', name: n, practice: true }); break; }
       case 'mute': muted = !muted; localStorage.setItem('will_mute', muted ? '1' : '0'); if (!muted) SFX.react(); render(); break;
       case 'emojitoggle': { const e = $('#emojis'); e.hidden = !e.hidden; break; }
-      case 'react': send({ t: 'react', emoji: el.dataset.e }); break;
+      case 'react': send({ t: 'react', emoji: el.dataset.e }); $('#emojis').hidden = true; break;
       case 'rematch': send({ t: 'react', emoji: 'Revanche?' }); toast('Pedido de revanche enviado!', 'good'); break;
       case 'closeoverlay': if (S && S.phase === 'ended') dismissedResult = S.gameNo; closeOverlay(); break;
       case 'showresult': dismissedResult = null; renderResult(); break;
@@ -774,7 +778,13 @@
       case 'swapmode': setMode(mode === 'swap' ? null : 'swap'); break;
       case 'skip': send({ t: 'skip' }); break;
       case 'cutmode': setMode(mode === 'cut' ? null : 'cut'); break;
-      case 'end': if (confirm('Encerrar a partida agora? Todos contam os pontos das cartas que têm na mão.')) send({ t: 'end' }); break;
+      case 'end': {
+        $('#menu').hidden = true;
+        $('#overlay').innerHTML = `<div class="modal"><h3>Encerrar a partida?</h3><p>Todos contam os pontos das cartas que têm na mão. Menos pontos vence.</p>
+          <div class="row"><button class="btn primary" data-act="endyes">Encerrar agora</button><button class="btn" data-act="closeoverlay">Cancelar</button></div></div>`;
+        $('#overlay').hidden = false; confirmingEnd = true; break;
+      }
+      case 'endyes': closeOverlay(); send({ t: 'end' }); break;
       default: break;
     }
   }

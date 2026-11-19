@@ -40,7 +40,7 @@ server.listen(0, async () => {
       if (st.ended) break;
       if (/pegou do descarte/.test(st.msg)) { await click('#me .card:nth-child(3)'); await sleep(250); continue; }
       if (st.end) {                                   // minha vez, fase de comprar
-        if (turns > 3) { await click('#actions [data-act=end]'); await sleep(1200); continue; }
+        if (turns > 3) { await click('#actions [data-act=end]'); await sleep(400); await click('#overlay [data-act=endyes]'); await sleep(1200); continue; }
         turns++;
         if (turns === 2 && !tookDiscard && await p.$('#discardPile .card:not(.slot)')) { tookDiscard++; await click('#discardPile .card'); await sleep(2600); continue; }
         if (turns === 3 && !dragged) {
