@@ -156,26 +156,6 @@ Observação: as salas ficam em memória; reiniciar o servidor encerra as partid
 
 ## v25 — Removidas as marcas ⇄ / 👁 das cartas; ficam a animação, o aviso com a posição e o histórico.
 
-## v26 — Poderes mais discretos
-- Dama e 10: sem ampliar a carta; só um olho azul sobre a carta olhada, na mesma posição e direção em que ela está (cartas dos lados continuam deitadas).
-- Valete: as duas cartas, do tamanho normal e na direção de cada lugar, trocam de lugar em 1,5 s, sem aviso extra nem ampliação.
-
-## v27 — Troca do Valete na direção certa
-- Corrigido: nas cartas dos jogadores dos lados (giradas 90°), o deslocamento da animação era girado junto e a carta ia para o lado errado. Agora usa a propriedade `translate`, independente da rotação, e cada carta vai exatamente ao lugar da outra.
-
-## v28 — Carta comprada/descartada chega virada para o jogador
-- As cartas que voam (compra, pegar do descarte, descarte, corte) giram para a direção do assento de destino/origem: viradas 90° para quem está nos lados, em pé para você e para quem está na frente.
-
-## v29 — Bot Expert e estratégias de jogo
-- Novo nível **Expert** (memória quase perfeita, corta em 0,4–1 s, encerra com mais decisão).
-- Estratégia (Difícil e Expert):
-  - Dama: espia uma carta ainda desconhecida de quem tem menos cartas.
-  - Carta de poder útil (10, Dama, Valete) é descartada para usar o poder em vez de guardada.
-  - Valete (Difícil): entrega a carta alta que conhece a quem tem menos cartas.
-  - Valete (Expert): (1) leva uma carta baixa de adversário que sabe onde está; (2) entrega carta alta a quem tem 2 cartas ou menos; (3) sem carta alta, embaralha a mão de quem está perto de acabar com a de outro adversário.
-  - Expert encerra antes quando alguém está a ≤2 cartas e a mão dele é razoável; nunca encerra com mão ruim.
-- Benchmark (400 partidas, 1 bot de cada nível): vitórias Fácil 5%, Médio 17%, Difícil 33%, Expert 44%.
-
-## v30 — Bots em ritmo humano em todos os níveis
-- O tempo de reação ao corte agora é parecido em todos os níveis (cerca de 1,5 a 3,6 s) e o tempo de pensar é o mesmo; a dificuldade vem da memória e da estratégia, não da velocidade.
-- Benchmark (400 partidas): Fácil 8%, Médio 20%, Difícil 26%, Expert 46% de vitórias.
+## v31 — Bots só encerram com certeza
+- O bot encerra apenas se a soma estimada dele + uma folga ficar abaixo da estimativa pessimista de **todos** os adversários (carta que ele nunca viu conta 4,5). Quanto mais alto o nível, mais exigente (Expert/Difícil não encerram com carta própria desconhecida).
+- Teste de auditoria (`test/bots.js`): em partidas completas só entre bots, toda leitura de valor de carta feita pelas funções de decisão precisa ser da carta comprada ou do topo do descarte. Os bots só sabem o que viram.

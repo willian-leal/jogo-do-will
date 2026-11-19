@@ -98,7 +98,7 @@ function mk(speed) {
     const Bot = require('../bot');
     const mkb = (trait) => Bot.params({ level: 'medio', trait });
     assert(mkb('afobado').react[0] < mkb('equilibrado').react[0], 'afobado reage mais rápido');
-    assert(mkb('cauteloso').end.prob < mkb('equilibrado').end.prob, 'cauteloso encerra menos');
+    assert(mkb('cauteloso').end.safe > mkb('equilibrado').end.safe, 'cauteloso exige mais folga para encerrar');
     assert(Bot.TRAITS.includes(room.addPlayer({ name: 'B', bot: true }).trait));
     room.destroy();
   }

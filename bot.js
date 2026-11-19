@@ -7,12 +7,12 @@ const LEVEL_NAMES = { facil: 'Fácil', medio: 'Médio', dificil: 'Difícil', exp
 const PARAMS = {
   // misremember: chance de memorizar valor errado · forget: esquecer por turno · react: janela de reação ao corte (ms)
   // A dificuldade vem da memória e da estratégia, NÃO da velocidade: todos os níveis reagem e jogam em ritmo humano.
-  // think: multiplicador do tempo de pensar · end: {turns, est, prob} para encerrar · margin: ganho mínimo para trocar
+  // think: multiplicador do tempo de pensar · end: {turns mínimos, unk = cartas desconhecidas permitidas, safe = folga de pontos sobre o melhor adversário, prob} · margin: ganho mínimo para trocar
   // smart: 0 = poderes ao acaso · 1 = Dama mira cartas desconhecidas do adversário mais perto de ganhar e o Valete se livra de carta alta · 2 = também usa o Valete para atrapalhar quem tem poucas cartas
-  facil:   { misremember: 0.16, forget: 0.08, react: [1800, 3600], think: 1.1, end: { turns: 6, est: 4, prob: 0.15 }, margin: 4, blind: 3, smart: 0 },
-  medio:   { misremember: 0.06, forget: 0.03, react: [1700, 3400], think: 1.0,  end: { turns: 5, est: 5, prob: 0.25 }, margin: 3, blind: 4, smart: 0 },
-  dificil: { misremember: 0.015, forget: 0.01, react: [1600, 3200], think: 1.0,  end: { turns: 5, est: 5, prob: 0.40 }, margin: 2, blind: 5, smart: 1 },
-  expert:  { misremember: 0.004, forget: 0.003, react: [1500, 3000], think: 1.0, end: { turns: 4, est: 5, prob: 0.60 }, margin: 2, blind: 6, smart: 2 },
+  facil:   { misremember: 0.16, forget: 0.08, react: [1800, 3600], think: 1.1, end: { turns: 6, unk: 1, safe: 1, prob: 0.5 }, margin: 4, blind: 3, smart: 0 },
+  medio:   { misremember: 0.06, forget: 0.03, react: [1700, 3400], think: 1.0,  end: { turns: 5, unk: 1, safe: 2, prob: 0.7 }, margin: 3, blind: 4, smart: 0 },
+  dificil: { misremember: 0.015, forget: 0.01, react: [1600, 3200], think: 1.0,  end: { turns: 5, unk: 0, safe: 3, prob: 0.85 }, margin: 2, blind: 5, smart: 1 },
+  expert:  { misremember: 0.004, forget: 0.003, react: [1500, 3000], think: 1.0, end: { turns: 4, unk: 0, safe: 4, prob: 1 }, margin: 2, blind: 6, smart: 2 },
 };
 // personalidades: dão variedade sem mudar o nível de dificuldade
 const TRAITS = ['equilibrado', 'afobado', 'cauteloso'];
@@ -24,9 +24,9 @@ function params(p) {
   const base = PARAMS[p.level] || PARAMS.medio;
   const q = { ...base, react: [...base.react], end: { ...base.end } };
   if (p.trait === 'afobado') { // reage rápido e se confunde mais; encerra cedo
-    q.react = [q.react[0] * 0.85, q.react[1] * 0.85]; q.misremember *= 1.8; q.end.prob = Math.min(0.9, q.end.prob * 1.5); q.think *= 0.9;
+    q.react = [q.react[0] * 0.85, q.react[1] * 0.85]; q.misremember *= 1.8; q.end.safe = Math.max(0, q.end.safe - 1); q.think *= 0.9;
   } else if (p.trait === 'cauteloso') { // pensa mais, esquece menos, só encerra com folga
-    q.forget *= 0.7; q.end.turns += 1; q.end.prob *= 0.6; q.think *= 1.15;
+    q.forget *= 0.7; q.end.turns += 1; q.end.safe += 1; q.think *= 1.15;
   }
   cache.set(key, q);
   return q;
@@ -54,20 +54,18 @@ function estimate(p) {
   return s;
 }
 
+// Só encerra quando tem (quase) certeza de que ganha: a sua soma, mais uma folga, precisa ficar abaixo da
+// estimativa pessimista de TODOS os adversários (carta que o bot nunca viu conta como 4,5 pontos, abaixo da média ~6,5).
+const PESSIMIST = 4.5;
 function shouldEnd(p, room) {
   decay(p);
-  const e = params(p).end, est = estimate(p);
-  // só encerra quando tem boa certeza: poucas cartas desconhecidas e soma baixa
-  if (unknown(p).length > 1) return false;
-  if (params(p).smart >= 2 && room) {
-    // Expert: se alguém está a poucas cartas de acabar, encerra antes com uma mão razoável; com mão ruim não arrisca
-    const threat = room.parts().some((o) => o !== p && o.hand.length <= 2);
-    if (est > 9) return false;
-    if (threat && p.turns >= 3 && est <= 8 && Math.random() < 0.7) return true;
-  }
-  if (p.turns >= e.turns && est <= e.est && Math.random() < e.prob) return true;
-  if (p.hand.length <= 2 && p.turns >= e.turns - 1 && est <= e.est + 2 && Math.random() < e.prob * 0.7) return true;
-  return false;
+  const e = params(p).end;
+  if (p.turns < e.turns || unknown(p).length > e.unk) return false;
+  const rivals = room ? room.parts().filter((o) => o !== p) : [];
+  if (!rivals.length) return false;
+  const mine = estimate(p);
+  const best = Math.min(...rivals.map((o) => o.hand.reduce((s, id) => s + (p.memory[id] !== undefined ? p.memory[id] : PESSIMIST), 0)));
+  return mine + e.safe <= best && Math.random() < e.prob;
 }
 
 // vale a pena pegar o topo do descarte (carta pública) em vez de arriscar a pilha?
