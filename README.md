@@ -175,3 +175,7 @@ Observação: as salas ficam em memória; reiniciar o servidor encerra as partid
   - Valete (Expert): (1) leva uma carta baixa de adversário que sabe onde está; (2) entrega carta alta a quem tem 2 cartas ou menos; (3) sem carta alta, embaralha a mão de quem está perto de acabar com a de outro adversário.
   - Expert encerra antes quando alguém está a ≤2 cartas e a mão dele é razoável; nunca encerra com mão ruim.
 - Benchmark (400 partidas, 1 bot de cada nível): vitórias Fácil 5%, Médio 17%, Difícil 33%, Expert 44%.
+
+## v30 — Bots em ritmo humano em todos os níveis
+- O tempo de reação ao corte agora é parecido em todos os níveis (cerca de 1,5 a 3,6 s) e o tempo de pensar é o mesmo; a dificuldade vem da memória e da estratégia, não da velocidade.
+- Benchmark (400 partidas): Fácil 8%, Médio 20%, Difícil 26%, Expert 46% de vitórias.

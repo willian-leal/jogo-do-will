@@ -6,12 +6,13 @@ const LEVEL_NAMES = { facil: 'Fácil', medio: 'Médio', dificil: 'Difícil', exp
 
 const PARAMS = {
   // misremember: chance de memorizar valor errado · forget: esquecer por turno · react: janela de reação ao corte (ms)
+  // A dificuldade vem da memória e da estratégia, NÃO da velocidade: todos os níveis reagem e jogam em ritmo humano.
   // think: multiplicador do tempo de pensar · end: {turns, est, prob} para encerrar · margin: ganho mínimo para trocar
   // smart: 0 = poderes ao acaso · 1 = Dama mira cartas desconhecidas do adversário mais perto de ganhar e o Valete se livra de carta alta · 2 = também usa o Valete para atrapalhar quem tem poucas cartas
-  facil:   { misremember: 0.16, forget: 0.08, react: [1600, 3800], think: 1.25, end: { turns: 6, est: 4, prob: 0.15 }, margin: 4, blind: 3, smart: 0 },
-  medio:   { misremember: 0.06, forget: 0.03, react: [1000, 2600], think: 1.0,  end: { turns: 5, est: 5, prob: 0.25 }, margin: 3, blind: 4, smart: 0 },
-  dificil: { misremember: 0.015, forget: 0.01, react: [650, 1500], think: 0.8,  end: { turns: 5, est: 5, prob: 0.40 }, margin: 2, blind: 5, smart: 1 },
-  expert:  { misremember: 0.004, forget: 0.003, react: [420, 950], think: 0.65, end: { turns: 4, est: 5, prob: 0.60 }, margin: 2, blind: 6, smart: 2 },
+  facil:   { misremember: 0.16, forget: 0.08, react: [1800, 3600], think: 1.1, end: { turns: 6, est: 4, prob: 0.15 }, margin: 4, blind: 3, smart: 0 },
+  medio:   { misremember: 0.06, forget: 0.03, react: [1700, 3400], think: 1.0,  end: { turns: 5, est: 5, prob: 0.25 }, margin: 3, blind: 4, smart: 0 },
+  dificil: { misremember: 0.015, forget: 0.01, react: [1600, 3200], think: 1.0,  end: { turns: 5, est: 5, prob: 0.40 }, margin: 2, blind: 5, smart: 1 },
+  expert:  { misremember: 0.004, forget: 0.003, react: [1500, 3000], think: 1.0, end: { turns: 4, est: 5, prob: 0.60 }, margin: 2, blind: 6, smart: 2 },
 };
 // personalidades: dão variedade sem mudar o nível de dificuldade
 const TRAITS = ['equilibrado', 'afobado', 'cauteloso'];
@@ -23,7 +24,7 @@ function params(p) {
   const base = PARAMS[p.level] || PARAMS.medio;
   const q = { ...base, react: [...base.react], end: { ...base.end } };
   if (p.trait === 'afobado') { // reage rápido e se confunde mais; encerra cedo
-    q.react = [q.react[0] * 0.7, q.react[1] * 0.7]; q.misremember *= 1.8; q.end.prob = Math.min(0.9, q.end.prob * 1.5); q.think *= 0.85;
+    q.react = [q.react[0] * 0.85, q.react[1] * 0.85]; q.misremember *= 1.8; q.end.prob = Math.min(0.9, q.end.prob * 1.5); q.think *= 0.9;
   } else if (p.trait === 'cauteloso') { // pensa mais, esquece menos, só encerra com folga
     q.forget *= 0.7; q.end.turns += 1; q.end.prob *= 0.6; q.think *= 1.15;
   }
