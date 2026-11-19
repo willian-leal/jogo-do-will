@@ -143,3 +143,9 @@ Observação: as salas ficam em memória; reiniciar o servidor encerra as partid
 
 ## v22 — Aviso de corte não desloca mais a tela
 - O aviso temporário ("Fulano cortou…", "errou o corte…") ficava entre a mesa e a mão e, ao aparecer/sumir, empurrava os botões e as cartas ~45 px. Um toque feito no instante em que ele sumia acertava uma carta da mão e virava um corte errado (carta de punição). Agora o aviso flutua sobre a base da mesa, sem ocupar espaço.
+
+## v23 — Poderes do Valete e da Dama visíveis
+- Valete (J): as duas cartas trocadas ganham a marca ⇄ (dourada); Dama (Q): a carta espiada ganha a marca 👁 (azul) com o nome de quem olhou no toque/passar o mouse.
+- Nas suas cartas a marca fica até a carta sair da sua mão; nas dos adversários dura 20 s.
+- O aviso diz a posição: "Bia usou o Valete: trocou a 2ª carta sua com a 3ª carta de Caio" / "…espiou a 3ª carta sua" (7 s), e o histórico traz as mesmas posições.
+- Correção: o destaque dos poderes não aparecia porque a tela só era redesenhada depois de a animação acabar.

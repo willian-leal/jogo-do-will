@@ -377,7 +377,7 @@ class Room {
       this.remember(p, id, false);
       this.reveal(p, [id], 4000);
       this.fx({ k: 'power', type: '10', by: pid, targets: [{ owner: pid, cardId: id }] });
-      this.logMsg(`${p.name} usou o 10 e revisou uma carta sua.`);
+      this.logMsg(`${p.name} usou o 10 e revisou a ${p.hand.indexOf(id) + 1}ª carta sua.`);
     } else if (pend.type === 'Q') {
       const id = targets[0];
       const o = this.owner(id);
@@ -385,7 +385,7 @@ class Room {
       this.remember(p, id, false);
       this.reveal(p, [id], 4000);
       this.fx({ k: 'power', type: 'Q', by: pid, targets: [{ owner: o.id, cardId: id }] });
-      this.logMsg(`${p.name} usou a Dama e espiou uma carta de ${o.name}.`);
+      this.logMsg(`${p.name} usou a Dama e espiou a ${o.hand.indexOf(id) + 1}ª carta de ${o.name}.`);
     } else if (pend.type === 'J') {
       const [a, b] = targets;
       const oa = this.owner(a), ob = this.owner(b);
@@ -393,7 +393,7 @@ class Room {
       const ia = oa.hand.indexOf(a), ib = ob.hand.indexOf(b);
       oa.hand[ia] = b; ob.hand[ib] = a;
       this.fx({ k: 'power', type: 'J', by: pid, targets: [{ owner: oa.id, cardId: b }, { owner: ob.id, cardId: a }] });
-      this.logMsg(`${p.name} usou o Valete: trocou uma carta de ${oa.name} com uma de ${ob.name}.`);
+      this.logMsg(`${p.name} usou o Valete: trocou a ${ia + 1}ª carta de ${oa.name} com a ${ib + 1}ª carta de ${ob.name}.`);
     }
     this.advanceTurn();
     this.change();
