@@ -32,6 +32,8 @@ function shuffle(a) {
   return a;
 }
 
+const AWAY_MS = 30 * 60 * 1000;   // vaga guardada para quem volta ao início depois da partida
+
 class Room {
   constructor(code, opts = {}) {
     this.code = code;
@@ -120,12 +122,13 @@ class Room {
     const h = this.players.find((p) => !p.bot && p.connected) || this.players.find((p) => !p.bot);
     this.hostId = h ? h.id : null;
   }
-  disconnect(p) {
-    p.connected = false; p.send = () => {}; p.conn = null;
+  // away = o jogador voltou ao início de propósito: a vaga fica guardada por mais tempo, para ele reentrar sem novo convite
+  disconnect(p, { away = false } = {}) {
+    p.connected = false; p.send = () => {}; p.conn = null; p.away = away;
     if (this.hostId === p.id) this.reassignHost();
-    this.logMsg(`${p.name} desconectou.`);
+    this.logMsg(away ? `${p.name} voltou ao início (a vaga fica guardada).` : `${p.name} desconectou.`);
     if (this.phase === 'lobby' || this.phase === 'ended') {
-      this.after(60000 / this.speed, () => { // 60s reais de tolerância
+      this.after((away ? AWAY_MS : 60000) / this.speed, () => { // tolerância antes de liberar a vaga
         if (!p.connected && (this.phase === 'lobby' || this.phase === 'ended')) {
           this.players = this.players.filter((x) => x !== p);
           if (this.hostId === p.id) this.reassignHost();
@@ -136,7 +139,7 @@ class Room {
     this.change();
   }
   reconnected(p) {
-    p.connected = true;
+    p.connected = true; p.away = false;
     const h = this.byId(this.hostId);
     if (!h || !h.connected) this.hostId = p.id;
     this.logMsg(`${p.name} voltou.`);

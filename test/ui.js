@@ -69,9 +69,12 @@ server.listen(0, async () => {
     assert(await p.evaluate(() => document.documentElement.classList.contains('rm')), 'reduzir animações aplica a classe');
     // voltar ao início depois do resultado
     await click('[data-act=closeoverlay]');
-    assert(await p.$('#actions [data-act=leave]'), 'botão Voltar ao início na mesa após o fim');
-    await click('#actions [data-act=leave]'); await sleep(600);
+    assert(await p.$('#actions [data-act=away]'), 'botão Voltar ao início na mesa após o fim');
+    await click('#actions [data-act=away]'); await sleep(600);
     assert(await p.evaluate(() => !document.querySelector('#home').hidden && document.querySelector('#overlay').hidden), 'voltou à tela inicial');
+    assert(await p.evaluate(() => !document.querySelector('#backBtn').hidden && /Voltar à sala/.test(document.querySelector('#backBtn').textContent)), 'botão Voltar à sala na home');
+    await click('#backBtn'); await sleep(800);
+    assert(await p.evaluate(() => !document.querySelector('#game').hidden), 'reentrou na mesma sala sem novo convite');
     assert.deepStrictEqual(errs, [], 'sem erros de JS');
     console.log('OK: UI no navegador (treino, dicas, teclado/aria, resultado, estatísticas, acessibilidade).');
     await b.close(); process.exit(0);

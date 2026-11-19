@@ -111,6 +111,18 @@ function mk(speed) {
     assert(!seen.some((f) => f.emoji === 'texto livre qualquer'), 'texto livre é ignorado');
     room.destroy();
   }
-  console.log('OK: extras (relógio, configurações, reações, vitórias).');
+  // voltar ao início guarda a vaga por mais tempo que uma queda de conexão
+  {
+    const { room, ps } = mk(1);
+    const delays = []; room.after = (ms, fn) => delays.push({ ms, fn });
+    room.disconnect(ps[1], { away: true }); room.disconnect(ps[2]);
+    assert.strictEqual(delays[0].ms, 30 * 60 * 1000, 'vaga guardada por 30 min');
+    assert.strictEqual(delays[1].ms, 60 * 1000, 'queda de conexão: 60 s');
+    delays[1].fn(); assert(!room.players.includes(ps[2]), 'vaga liberada depois da tolerância');
+    room.reconnected(ps[1]); assert.strictEqual(ps[1].away, false);
+    delays[0].fn(); assert(room.players.includes(ps[1]), 'quem voltou não perde a vaga');
+    room.destroy();
+  }
+  console.log('OK: extras (relógio, configurações, reações, vitórias, vaga guardada).');
   process.exit(0);
 })().catch((e) => { console.error('FALHOU', e); process.exit(1); });

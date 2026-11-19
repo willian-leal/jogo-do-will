@@ -113,3 +113,7 @@ Observação: as salas ficam em memória; reiniciar o servidor encerra as partid
 
 ## Novidades da versão 15
 - **Voltar ao início:** no resultado da partida há o botão "Voltar ao início" (e também na mesa depois de fechar o resultado). Sai da sala e volta à tela inicial.
+
+## Novidades da versão 16
+- **Voltar ao início sem perder a vaga:** depois da partida (ou no lobby), "Voltar ao início" guarda a sua vaga na sala por 30 minutos. Na home aparece "Voltar à sala XXXX": um toque e você reentra, sem novo convite. "Sair da sala" no menu continua saindo de vez.
+- A sala só é apagada depois de 45 minutos sem ninguém conectado. As salas continuam só na memória do servidor: se o Render reiniciar ou hibernar, elas somem.

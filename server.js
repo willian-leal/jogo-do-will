@@ -78,6 +78,14 @@ function handle(conn, m) {
     return send({ t: 'error', code: 'resume', msg: 'Sessão expirada.' });
   }
   if (!conn.room || !conn.player) return;
+  if (m.t === 'away') { // volta ao início sem perder a vaga (só no lobby ou depois da partida)
+    const { room, player } = conn;
+    if (room.phase !== 'lobby' && room.phase !== 'ended') return send({ t: 'error', msg: 'Use "Sair da sala" durante a partida.' });
+    const code = room.code, token = player.token;
+    conn.room = null; conn.player = null;
+    room.disconnect(player, { away: true });
+    return send({ t: 'away', code, token });
+  }
   if (m.t === 'leave') {
     const { room, player } = conn;
     conn.room = null; conn.player = null;
@@ -121,7 +129,7 @@ setInterval(() => {
   }
   const now = Date.now();
   for (const [code, room] of rooms) {
-    if (!room.hasHumans() && now - room.lastActivity > 15 * 60 * 1000) { room.destroy(); rooms.delete(code); }
+    if (!room.hasHumans() && now - room.lastActivity > 45 * 60 * 1000) { room.destroy(); rooms.delete(code); }
   }
 }, 30000).unref();
 

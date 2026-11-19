@@ -28,6 +28,7 @@
   const botTag = (p) => (p.bot ? '<span class="bot">BOT</span>' : '');
 
   /* --------------------- estatísticas locais e acessibilidade ---------------- */
+  const getAway = () => { try { const a = JSON.parse(localStorage.getItem('will_away')); return a && a.token ? a : null; } catch (_) { return null; } };
   const loadJSON = (k, d) => { try { return Object.assign({}, d, JSON.parse(localStorage.getItem(k) || '{}')); } catch (_) { return { ...d }; } };
   const STATS0 = { games: 0, wins: 0, rounds: 0, cutsOk: 0, cutsBad: 0, best: null };
   const bumpStats = (fn) => { const s = loadJSON('will_stats', STATS0); fn(s); try { localStorage.setItem('will_stats', JSON.stringify(s)); } catch (_) { /* ignore */ } };
@@ -127,7 +128,7 @@
 
   function onMsg(m) {
     if (m.t === 'joined') {
-      localStorage.setItem('will_token', m.token);
+      localStorage.setItem('will_token', m.token); localStorage.removeItem('will_away');
       history.replaceState(null, '', `?sala=${m.code}`);
     } else if (m.t === 'state') {
       if (S && S.phase !== m.phase) { mode = null; sel = []; }
@@ -171,10 +172,13 @@
       }
       render();
     } else if (m.t === 'error') {
-      if (m.code === 'resume') { localStorage.removeItem('will_token'); show('home'); return; }
+      if (m.code === 'resume') { localStorage.removeItem('will_token'); if (localStorage.getItem('will_away')) { localStorage.removeItem('will_away'); toast('Essa sala não existe mais.', 'bad'); } show('home'); return; }
       toast(m.msg, 'bad');
     } else if (m.t === 'toast') {
       toast(m.msg, m.kind);
+    } else if (m.t === 'away') {
+      localStorage.removeItem('will_token'); try { localStorage.setItem('will_away', JSON.stringify({ code: m.code, token: m.token })); } catch (_) { /* ignore */ }
+      S = null; closeOverlay(); history.replaceState(null, '', location.pathname); show('home');
     } else if (m.t === 'left') {
       localStorage.removeItem('will_token'); S = null; closeOverlay(); history.replaceState(null, '', location.pathname); show('home');
     }
@@ -189,6 +193,10 @@
   }
   function show(name) {
     for (const id of ['home', 'lobby', 'game']) $('#' + id).hidden = id !== name;
+    if (name === 'home') {
+      const aw = getAway(), b = $('#backBtn');
+      if (b) { b.hidden = !aw; if (aw) b.textContent = `Voltar à sala ${aw.code}`; }
+    }
   }
   function revealOf(id) {
     const r = reveals[id];
@@ -362,7 +370,7 @@
       const ownPower = S.sub === 'power' && S.power && S.power.by === S.you && (S.power.type === '10' || S.power.type === 'J');
       if (S.cutOpen && (a11y.btns || ownPower)) a.push(`<button class="btn cut ${mode === 'cut' ? 'on' : ''}" data-act="cutmode">${icon('cut', 22, 2.2)}CORTAR (C)</button>`);
     }
-    if (S.phase === 'ended') a.push('<button class="btn primary" data-act="showresult">Ver resultado</button><button class="btn" data-act="leave">Voltar ao início</button>');
+    if (S.phase === 'ended') a.push('<button class="btn primary" data-act="showresult">Ver resultado</button><button class="btn" data-act="away">Voltar ao início</button>');
     $('#actions').innerHTML = a.join('');
 
     /* minha mão */
@@ -422,7 +430,7 @@
         ${host && r.tie && !multi ? '<button class="btn" data-act="startextra">Rodada extra (só os empatados)</button>' : ''}
         ${host && !(multi && !sr.done) ? '<button class="btn" data-act="addbot">+ Bot</button>' : ''}
         <button class="btn" data-act="closeoverlay">Ver mesa</button>
-        <button class="btn" data-act="leave">Voltar ao início</button>
+        <button class="btn" data-act="away">Voltar ao início</button>
       </div>
       ${host ? `<div class="stack">${turnSelHTML()}${paceSelHTML()}${roundsSelHTML()}</div>` : ''}</div>`;
     $('#overlay').hidden = false;
@@ -733,6 +741,8 @@
         break;
       }
       case 'leave': send({ t: 'leave' }); break;
+      case 'away': send({ t: 'away' }); break;
+      case 'backtoroom': { const aw = getAway(); if (aw) { localStorage.setItem('will_token', aw.token); send({ t: 'resume', token: aw.token }); } break; }
       case 'menutoggle': { const m = $('#menu'); m.hidden = !m.hidden; break; }
       case 'logtoggle': { const lp = $('#logpanel'); lp.hidden = !lp.hidden; render(); break; }
       case 'addbot': { const sel = $('#levelSel'); if (sel) { botLevel = sel.value; localStorage.setItem('will_level', botLevel); } send({ t: 'addBot', level: botLevel }); break; }
