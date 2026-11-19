@@ -140,3 +140,6 @@ Observação: as salas ficam em memória; reiniciar o servidor encerra as partid
 ## v21 — Corte quase simultâneo ao descarte
 - Se um corte válido chega depois de o topo já ter mudado (alguém descartou no mesmo instante), a carta cortada não pousa mais animada por cima do novo topo.
 - O aviso do corte agora diz sobre qual carta ele valeu: "Fulano cortou o 7 com 7!".
+
+## v22 — Aviso de corte não desloca mais a tela
+- O aviso temporário ("Fulano cortou…", "errou o corte…") ficava entre a mesa e a mão e, ao aparecer/sumir, empurrava os botões e as cartas ~45 px. Um toque feito no instante em que ele sumia acertava uma carta da mão e virava um corte errado (carta de punição). Agora o aviso flutua sobre a base da mesa, sem ocupar espaço.
