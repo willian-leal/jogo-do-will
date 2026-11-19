@@ -106,3 +106,7 @@ Observação: as salas ficam em memória; reiniciar o servidor encerra as partid
 
 ## Novidades da versão 13
 - **Mesa quadrada:** você fica embaixo e os outros jogadores nos outros lados — esquerda, frente e direita —, no sentido da vez a partir de você. 2 jogadores: um de cada lado; 3: esquerda, frente e direita; 4 a 8: distribuídos entre os três lados. As pilhas ficam no centro. Nos lados as cartas ficam giradas, viradas para quem está sentado ali, e enfileiradas em coluna.
+
+## Novidades da versão 14
+- **Cortar durante o próprio poder:** ao descartar um 10 ou Valete com outra igual na mão, dá para cortar sem ser obrigado a usar o poder: arraste a carta até o descarte, ou toque em CORTAR (aparece enquanto o poder está pendente). O poder continua opcional.
+- **Costas das cartas dos adversários** agora mostram o "W", igual às suas e à pilha.

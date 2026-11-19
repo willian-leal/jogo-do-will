@@ -98,6 +98,19 @@ assert.strictEqual(points({ rank: '10', suit: 'D' }), 10);
   room.checkInvariant();
 }
 
+// 4c. descartei um Valete e tenho outro na mão: posso cortar durante o poder pendente
+{
+  const { room, ps } = setup(3);
+  stackDraw(room, 'J', 'S'); room.doDraw(ps[0].id); room.discardDrawn(ps[0].id);
+  assert.strictEqual(room.sub, 'power'); assert.strictEqual(room.pending.by, ps[0].id);
+  give(room, ps[0], 0, 'J', 'H');
+  const n = ps[0].hand.length;
+  room.cut(ps[0].id, ps[0].hand[0]);
+  assert.strictEqual(ps[0].hand.length, n - 1);
+  assert.strictEqual(room.sub, 'power');                                  // o poder segue opcional
+  room.skipPower(ps[0].id); room.checkInvariant();
+}
+
 // 5. Reis: preto != vermelho; mesma cor corta
 {
   const { room, ps } = setup(3);

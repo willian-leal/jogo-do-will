@@ -84,7 +84,7 @@ input:focus{box-shadow:0 0 0 3px rgba(232,184,74,.6)}
 .pname small{font-weight:500;color:var(--soft)}
 .row{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
 .opp .card{--card-w:38px;--card-h:54px}
-.opp .card .roundel{display:none}
+.opp .card .roundel{border-width:1px;width:calc(var(--card-w)*.46);height:calc(var(--card-w)*.46);font-size:calc(var(--card-w)*.28)}
 .opp small.cnt{color:var(--soft);font-size:.75rem}
 
 .center{display:flex;gap:22px;justify-content:center;align-items:flex-start;padding:10px 0;flex-wrap:nowrap}

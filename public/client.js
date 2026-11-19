@@ -331,7 +331,7 @@
         else if (S.sub === 'action' && !narr) msg = '';
         else if (S.sub === 'action' && S.drawnFrom === 'discard') msg = 'Você pegou do descarte: toque na carta sua que vai trocar.';
         else if (S.sub === 'action') msg = 'Toque numa carta sua para trocar, ou no descarte para descartar a comprada.';
-        else if (S.sub === 'power') msg = `Poder d${powerText[S.power.type]}${S.power.type === 'J' ? ` (${sel.length}/2)` : ''}. Opcional.`;
+        else if (S.sub === 'power') msg = `Poder d${powerText[S.power.type]}${S.power.type === 'J' ? ` (${sel.length}/2)` : ''}. Opcional.${S.cutOpen && (S.power.type === '10' || S.power.type === 'J') ? ' Para cortar: arraste sua carta até o descarte ou toque em CORTAR.' : ''}`;
       } else if (S.sub === 'power' && S.power) msg = `${nameOf(S.power.by)} está decidindo se usa o poder do ${S.power.type === 'Q' ? 'Dama' : S.power.type === 'J' ? 'Valete' : '10'}…`;
       else msg = narr ? `Vez de ${nameOf(S.turn)}.` : '';
       if (mode === 'cut') { msg = 'Clique na carta da sua mão que tem o mesmo valor do descarte!'; mine = true; }
@@ -359,7 +359,8 @@
         }
       }
       if (myTurn && S.sub === 'power') a.push('<button class="btn" data-act="skip">Não usar o poder</button>');
-      if (S.cutOpen && a11y.btns) a.push(`<button class="btn cut ${mode === 'cut' ? 'on' : ''}" data-act="cutmode">${icon('cut', 22, 2.2)}CORTAR (C)</button>`);
+      const ownPower = S.sub === 'power' && S.power && S.power.by === S.you && (S.power.type === '10' || S.power.type === 'J');
+      if (S.cutOpen && (a11y.btns || ownPower)) a.push(`<button class="btn cut ${mode === 'cut' ? 'on' : ''}" data-act="cutmode">${icon('cut', 22, 2.2)}CORTAR (C)</button>`);
     }
     if (S.phase === 'ended') a.push('<button class="btn primary" data-act="showresult">Ver resultado</button>');
     $('#actions').innerHTML = a.join('');
@@ -619,7 +620,7 @@
     if (myTurn && S.sub === 'draw' && S.discardTop && t.closest('#discardPile')) return { kind: 'take', el: t.closest('#discardPile') };
     if (myTurn && S.sub === 'action' && S.drawn && t.closest('#drawnPile')) return { kind: 'drawn', el: t.closest('#drawnPile') };
     const ce = t.closest('[data-cid]');
-    if (ce && ce.dataset.owner === S.you && S.cutOpen && mode !== 'swap' && !(S.power && S.power.by === S.you)) return { kind: 'cutcard', el: ce, id: Number(ce.dataset.cid) };
+    if (ce && ce.dataset.owner === S.you && S.cutOpen && mode !== 'swap') return { kind: 'cutcard', el: ce, id: Number(ce.dataset.cid) };
     return null;
   }
   function dropTargets(kind) {
