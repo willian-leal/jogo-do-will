@@ -105,4 +105,4 @@ Observação: as salas ficam em memória; reiniciar o servidor encerra as partid
 - **Correção:** um corte que encerra a partida com alguém segurando a carta comprada fazia a carta sumir (a simulação de 120 partidas pegou); agora ela volta ao fundo da pilha.
 
 ## Novidades da versão 13
-- **Mesa quadrada:** você fica embaixo e os outros jogadores nos outros lados — esquerda, frente e direita —, no sentido da vez a partir de você. 2 jogadores: um de cada lado; 3: esquerda, frente e direita; 4 a 8: distribuídos entre os três lados. As pilhas ficam no centro. No celular, os lados mostram as cartas em 2×2 para caberem.
+- **Mesa quadrada:** você fica embaixo e os outros jogadores nos outros lados — esquerda, frente e direita —, no sentido da vez a partir de você. 2 jogadores: um de cada lado; 3: esquerda, frente e direita; 4 a 8: distribuídos entre os três lados. As pilhas ficam no centro. Nos lados as cartas ficam giradas, viradas para quem está sentado ali, e enfileiradas em coluna.

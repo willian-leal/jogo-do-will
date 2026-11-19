@@ -73,7 +73,11 @@ input:focus{box-shadow:0 0 0 3px rgba(232,184,74,.6)}
 .seat-t:empty{display:none}
 .center{grid-area:c}
 .seat-l .opp,.seat-r .opp{min-width:0;width:100%;max-width:170px;flex:0 1 auto;padding:8px 6px}
-.seat-l .oprow,.seat-r .oprow{justify-content:center;gap:4px}
+.seat-l .oprow,.seat-r .oprow{flex-direction:column;flex-wrap:nowrap;align-items:center;justify-content:center;gap:2px}
+/* jogadores dos lados: cartas viradas para eles (giradas) e enfileiradas em coluna */
+.seat-l .opp .card,.seat-r .opp .card{margin:calc((var(--card-w) - var(--card-h)) / 2) calc((var(--card-h) - var(--card-w)) / 2)}
+.seat-l .opp .card{rotate:90deg}
+.seat-r .opp .card{rotate:-90deg}
 .opp{background:var(--deep);border:2px solid transparent;border-radius:16px;padding:10px;display:flex;flex-direction:column;align-items:center;gap:8px;min-width:128px;flex:1 1 128px;max-width:260px;transition:border-color .2s,box-shadow .2s}
 .opp.turn,.me.turn .mehead{border-color:var(--gold);box-shadow:0 0 0 3px rgba(232,184,74,.25)}
 .pname{font-weight:700;font-size:.92rem;display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:center}
@@ -168,7 +172,7 @@ select option{color:#111}
   .board{gap:6px}
   .center{gap:10px}
   .center .card{--card-w:54px;--card-h:76px}
-  .seat-l .opp .card,.seat-r .opp .card{--card-w:30px;--card-h:42px}
+  .seat-l .opp .card,.seat-r .opp .card{--card-w:34px;--card-h:48px}
   .seat-l .opp .pname,.seat-r .opp .pname{font-size:.78rem}
   .seat-l .opp .pname small,.seat-r .opp .pname small{display:none}
   .me .card{--card-w:68px;--card-h:96px}
@@ -246,6 +250,5 @@ html.hc .droptarget{outline-width:3px}
 }
 @media (min-width:900px){.me .handslot,.me .handslot .card{--card-w:92px;--card-h:128px}.me .handslot{width:92px;height:128px}}
 @media (min-width:561px){
-  .seat-l .opp,.seat-r .opp{max-width:240px}
-  .seat-l .oprow,.seat-r .oprow{flex-wrap:nowrap}
+  .seat-l .opp,.seat-r .opp{max-width:150px}
 }
