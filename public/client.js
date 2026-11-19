@@ -285,16 +285,23 @@
     show('game');
     $('#gameCode').textContent = S.code;
     $('#roundTag').textContent = S.seriesRounds > 1 ? `· Rodada ${S.roundNo}/${S.seriesRounds}` : '';
+    {
+      const strip = $('#scoreStrip');
+      const tot = S.totals && Object.keys(S.totals).length ? Object.entries(S.totals).map(([id, v]) => ({ id, v, name: nameOf(id) })).sort((a, b) => a.v - b.v) : null;
+      strip.hidden = !tot;
+      if (tot) strip.innerHTML = `<b>Placar</b>${tot.map((x, i) => `<span class="${i === 0 ? 'lead' : ''}">${esc(x.name)} ${x.v}</span>`).join('')}`;
+    }
     const mp = me();
     const playing = mp && mp.inGame;
     const myTurn = S.phase === 'play' && S.turn === S.you;
     const opps = S.players.filter((p) => p.inGame && p.id !== S.you);
+    $('#board').classList.toggle('many', opps.length >= 5);
     const specs = !playing ? S.players.filter((p) => p.inGame) : opps;
 
     /* oponentes */
     const canTarget = S.power && S.power.by === S.you && (S.power.type === 'Q' || S.power.type === 'J');
     const oppHTML = (p) => `
-      <div class="opp ${S.turn === p.id ? 'turn' : ''}" data-pid="${p.id}">
+      <div class="opp ${S.turn === p.id ? 'turn' : ''} ${cutCls(p.id)}" data-pid="${p.id}">
         <div class="pname">${esc(p.name)}${botTag(p)}${winsTag(p.wins)} <small>${p.count} carta${p.count === 1 ? '' : 's'}${p.connected ? '' : ' · off'}</small>${S.turn === p.id && turnEnd ? ' <span class="timer" data-timer></span>' : ''}</div>
         <div class="row oprow">${p.hand.map((c) => cardHTML(c, {
           owner: p.id,
@@ -394,7 +401,7 @@
         })).join('')}${S.phase === 'ended' ? '' : (S.drawn
           ? `<div class="handslot has" id="drawnPile" title="${S.drawnFrom === 'discard' ? 'Pegou do descarte: troque por uma carta sua' : 'Toque numa carta sua para trocar ou no descarte para descartar'}">${cardHTML(S.drawn, { cls: 'inhand pop' })}</div>`
           : `<div class="handslot ${S.phase === 'play' ? '' : 'hid'}"></div>`)}</div>
-        <div class="mehead">${esc(mp.name)}${winsTag(mp.wins)} <small>(você) · ${mp.count} carta${mp.count === 1 ? '' : 's'}</small>${myTurn && turnEnd ? ' <span class="timer" data-timer></span>' : ''}</div>`;
+        <div class="mehead ${cutCls(S.you)}">${esc(mp.name)}${winsTag(mp.wins)} <small>(você) · ${mp.count} carta${mp.count === 1 ? '' : 's'}</small>${myTurn && turnEnd ? ' <span class="timer" data-timer></span>' : ''}</div>`;
     } else {
       $('#me').innerHTML = '';
     }
@@ -518,6 +525,9 @@
     const an = el.animate([{ transform: 'translate(0,0) scale(.75) rotate(-6deg)', opacity: .9 }, { transform: `translate(${dx}px,${dy}px) scale(1) rotate(0)`, opacity: 1 }], { duration: ms, easing: 'cubic-bezier(.2,.8,.2,1)' });
     an.onfinish = () => el.remove();
   }
+  const cutFx = {};   // destaque de quem cortou (verde) ou errou (vermelho) na caixa do jogador
+  function markCut(pid, ok) { cutFx[pid] = { until: Date.now() + 1600, ok }; setTimeout(render, 1650); }
+  const cutCls = (pid) => { const x = cutFx[pid]; return x && x.until > Date.now() ? (x.ok ? 'cutok' : 'cutbad') : ''; };
   function flash(cardId, cls, ms) {
     flashes[cardId] = { until: Date.now() + ms, cls };
     setTimeout(render, ms + 40);
@@ -555,10 +565,10 @@
         render();
         fly(boxOf(f.by), disc(), f.card, 520);
         if (f.k === 'discard' && f.via === 'swap' && f.slot) flash(f.slot, 'flash', 1500);
-        if (f.k === 'cut') note(`${who} cortou com ${f.card.rank}!`, 'cut');
+        if (f.k === 'cut') { note(`${who} cortou com ${f.card.rank}!`, 'cut'); markCut(f.by, true); }
       } else if (f.k === 'cut' && !f.ok) {
         SFX.cutbad(); if (f.by === S.you) { vib(220); bumpStats((s) => { s.cutsBad++; }); }
-        note(`${who} errou o corte e comprou uma carta`, 'cut');
+        note(`${who} errou o corte e comprou uma carta`, 'cut'); markCut(f.by, false);
         shake(boxOf(f.by));
         fly(document.querySelector('#drawPile .card'), boxOf(f.by), null, 480);
       } else if (f.k === 'react') {

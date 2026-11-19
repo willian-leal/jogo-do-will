@@ -256,3 +256,23 @@ html.hc .droptarget{outline-width:3px}
 .roomlist .empty{justify-content:center;color:var(--soft);font-size:.9rem}
 .roomlist small{color:var(--soft);font-weight:500}
 .roomlist .btn{min-height:40px;padding:6px 14px}
+
+/* destaque de corte: verde (certo) e vermelho (errado) na caixa de quem cortou */
+.opp,.mehead{position:relative}
+.opp.cutok,.mehead.cutok{border-color:#58D68D;box-shadow:0 0 0 4px rgba(88,214,141,.35)}
+.opp.cutbad,.mehead.cutbad{border-color:var(--red);box-shadow:0 0 0 4px rgba(226,59,75,.35)}
+.opp.cutok::after,.mehead.cutok::after,.opp.cutbad::after,.mehead.cutbad::after{position:absolute;top:-11px;right:8px;font:800 .72rem var(--body);padding:2px 8px;border-radius:999px;color:#08150E;z-index:4}
+.opp.cutok::after,.mehead.cutok::after{content:'✂ cortou!';background:#58D68D}
+.opp.cutbad::after,.mehead.cutbad::after{content:'errou!';background:#FF8A94}
+/* placar acumulado do campeonato */
+.scorestrip{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;justify-content:center;font-size:.8rem;color:var(--soft);padding:2px 8px}
+.scorestrip b{color:var(--ivory)}
+.scorestrip .lead{color:var(--gold);font-weight:700}
+@media (max-width:560px){
+  .board.many{gap:4px}
+  .board.many .opp{padding:5px 4px;gap:4px}
+  .board.many .opp .card{--card-w:24px;--card-h:34px}
+  .board.many .seat-l .opp .card,.board.many .seat-r .opp .card{--card-w:28px;--card-h:40px}
+  .board.many .opp small{display:none}
+  .board.many .center .card,.board.many .center .dstack{--card-w:46px;--card-h:65px}
+}

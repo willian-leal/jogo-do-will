@@ -120,3 +120,9 @@ Observação: as salas ficam em memória; reiniciar o servidor encerra as partid
 
 ## Novidades da versão 17
 - **Salas abertas:** o anfitrião liga "Sala pública" no lobby (desligada por padrão) e a sala aparece na lista "salas abertas" da tela inicial, com anfitrião, vagas e configurações. Qualquer um entra com um toque, sem código. A lista mostra só salas públicas, no lobby ou entre partidas, com alguém conectado e vaga livre; atualiza sozinha a cada 5 s.
+
+## Novidades da versão 18
+- **Quem cortou:** a caixa do jogador acende em verde com "✂ cortou!" no corte certo e em vermelho com "errou!" no errado, além do aviso e do som de antes.
+- **Placar do campeonato:** durante um campeonato (3 ou 5 rodadas) aparece uma faixa "Placar" sob o topo, com os pontos acumulados de cada jogador, o líder em dourado.
+- **Mesa compacta no celular:** com 5 ou mais adversários as cartas e as pilhas encolhem para a sua mão caber na tela.
+- Teste de WebSocket ficou robusto contra uma corrida entre o fim do poder e o envio da jogada.

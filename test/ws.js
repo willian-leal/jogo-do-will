@@ -61,6 +61,7 @@ server.listen(0, async () => {
         else if (S.sub === 'power') {
           const o = S.players.find((p) => p.id !== you && p.inGame);
           setTimeout(() => {
+            if (!S.power) return;
             if (S.power.type === '10') send({ t: 'power', targets: [me.hand[0].id] });
             else if (S.power.type === 'Q') send({ t: 'power', targets: [o.hand[0].id] });
             else send({ t: 'power', targets: [me.hand[0].id, o.hand[0].id] });

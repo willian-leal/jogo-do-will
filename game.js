@@ -509,7 +509,7 @@ class Room {
         hand: p.hand.map((id) => (ended && p.inGame ? pub(this.cards.get(id)) : { id })),
         peeksLeft: p.id === v.id ? p.peeksLeft : undefined,
       })),
-      turnTime: this.turnTime, fast: this.fast, public: this.public, lockFull: this.LOCK / this.speed, rounds: this.rounds, roundNo: this.roundNo, seriesRounds: this.seriesRounds,
+      turnTime: this.turnTime, fast: this.fast, public: this.public, lockFull: this.LOCK / this.speed, rounds: this.rounds, roundNo: this.roundNo, seriesRounds: this.seriesRounds, totals: this.seriesRounds > 1 ? this.totals : null,
       turnMs: this.deadline ? Math.max(0, Math.ceil((this.deadline - Date.now()) / this.speed)) : 0,
       turn: cur ? cur.id : null,
       sub: this.phase === 'play' ? this.sub : null,
