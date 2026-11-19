@@ -356,7 +356,7 @@ class Room {
     const c = this.cards.get(cardId);
     this.fx({ k: 'discard', by: p.id, via, slot, card: pub(c) });
     this.logMsg(`Descarte: ${this.label(c)}.`);
-    this.cutWindow = { value: points(c), sched: false };
+    this.cutWindow = { value: points(c), rank: c.rank, sched: false };
     if (c.rank === '10' || c.rank === 'Q' || c.rank === 'J') {
       this.sub = 'power'; this.pending = { type: c.rank, by: p.id };
     } else {
@@ -419,7 +419,7 @@ class Room {
       p.hand.splice(idx, 1);
       this.discard.push(cardId);
       this.cutWindow = null; // só o primeiro corte correto vale
-      this.fx({ k: 'cut', by: p.id, ok: true, card: pub(card) });
+      this.fx({ k: 'cut', by: p.id, ok: true, card: pub(card), over: cw.rank });
       this.logMsg(`${p.name} cortou com ${this.label(card)}! (${p.hand.length} carta${p.hand.length === 1 ? '' : 's'} na mão)`);
       if (p.hand.length === 0) return this.endGame('empty', pid);
       this.change();

@@ -136,3 +136,7 @@ Observação: as salas ficam em memória; reiniciar o servidor encerra as partid
 ## v20 — Mínimo de voltas para encerrar
 - Nova configuração da sala ("Encerrar só após"): livre, 1, 2 (padrão), 3 ou 5 voltas completas na mesa. O anfitrião escolhe no lobby e entre partidas.
 - Antes disso o botão mostra "Encerrar libera em N turnos" e o servidor recusa o pedido; os bots também respeitam.
+
+## v21 — Corte quase simultâneo ao descarte
+- Se um corte válido chega depois de o topo já ter mudado (alguém descartou no mesmo instante), a carta cortada não pousa mais animada por cima do novo topo.
+- O aviso do corte agora diz sobre qual carta ele valeu: "Fulano cortou o 7 com 7!".

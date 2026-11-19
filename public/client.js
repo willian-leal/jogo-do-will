@@ -568,12 +568,16 @@
       } else if (f.k === 'discard' || (f.k === 'cut' && f.ok)) {
         if (f.k === 'cut' && f.by === S.you) bumpStats((s) => { s.cutsOk++; });
         if (f.k === 'cut') { SFX.cutok(); if (f.by === S.you) vib([30, 40, 30]); } else SFX.discard();
-        ghostTop = { id: f.card.id, until: Date.now() + 520 };
-        setTimeout(render, 560);
-        render();
-        fly(boxOf(f.by), disc(), f.card, 520);
+        // corte que chegou depois de o topo já ter mudado (descarte quase simultâneo): não pousa por cima da carta nova
+        const stale = f.k === 'cut' && S.discardTop && S.discardTop.id !== f.card.id;
+        if (!stale) {
+          ghostTop = { id: f.card.id, until: Date.now() + 520 };
+          setTimeout(render, 560);
+          render();
+          fly(boxOf(f.by), disc(), f.card, 520);
+        }
         if (f.k === 'discard' && f.via === 'swap' && f.slot) flash(f.slot, 'flash', 1500);
-        if (f.k === 'cut') { note(`${who} cortou com ${f.card.rank}!`, 'cut'); markCut(f.by, true); }
+        if (f.k === 'cut') { note(f.over ? `${who} cortou o ${f.over} com ${f.card.rank}!` : `${who} cortou com ${f.card.rank}!`, 'cut'); markCut(f.by, true); }
       } else if (f.k === 'cut' && !f.ok) {
         SFX.cutbad(); if (f.by === S.you) { vib(220); bumpStats((s) => { s.cutsBad++; }); }
         note(`${who} errou o corte e comprou uma carta`, 'cut'); markCut(f.by, false);
