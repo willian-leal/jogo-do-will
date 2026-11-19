@@ -162,3 +162,6 @@ Observação: as salas ficam em memória; reiniciar o servidor encerra as partid
 
 ## v27 — Troca do Valete na direção certa
 - Corrigido: nas cartas dos jogadores dos lados (giradas 90°), o deslocamento da animação era girado junto e a carta ia para o lado errado. Agora usa a propriedade `translate`, independente da rotação, e cada carta vai exatamente ao lugar da outra.
+
+## v28 — Carta comprada/descartada chega virada para o jogador
+- As cartas que voam (compra, pegar do descarte, descarte, corte) giram para a direção do assento de destino/origem: viradas 90° para quem está nos lados, em pé para você e para quem está na frente.

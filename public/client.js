@@ -531,7 +531,10 @@
     el.style.cssText = `position:fixed;left:${a.left + a.width / 2 - 31}px;top:${a.top + a.height / 2 - 44}px;z-index:30;pointer-events:none;--card-w:62px;--card-h:88px`;
     document.body.appendChild(el);
     const dx = (b.left + b.width / 2) - (a.left + a.width / 2), dy = (b.top + b.height / 2) - (a.top + a.height / 2);
-    const an = el.animate([{ transform: 'translate(0,0) scale(.75) rotate(-6deg)', opacity: .9 }, { transform: `translate(${dx}px,${dy}px) scale(1) rotate(0)`, opacity: 1 }], { duration: ms, easing: 'cubic-bezier(.2,.8,.2,1)' });
+    // a carta chega virada para quem a recebe (jogadores dos lados têm as cartas giradas 90°); `translate` não gira junto com `rotate`
+    const r0 = rotOf(from), r1 = rotOf(to);
+    el.style.rotate = `${r0}deg`;
+    const an = el.animate([{ translate: '0px 0px', scale: .75, rotate: `${r0}deg`, opacity: .9 }, { translate: `${dx}px ${dy}px`, scale: 1, rotate: `${r1}deg`, opacity: 1 }], { duration: ms, easing: 'cubic-bezier(.2,.8,.2,1)' });
     an.onfinish = () => el.remove();
   }
   /* ---- animações dos poderes (no momento da ação) ---- */
