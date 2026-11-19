@@ -159,3 +159,6 @@ Observação: as salas ficam em memória; reiniciar o servidor encerra as partid
 ## v26 — Poderes mais discretos
 - Dama e 10: sem ampliar a carta; só um olho azul sobre a carta olhada, na mesma posição e direção em que ela está (cartas dos lados continuam deitadas).
 - Valete: as duas cartas, do tamanho normal e na direção de cada lugar, trocam de lugar em 1,5 s, sem aviso extra nem ampliação.
+
+## v27 — Troca do Valete na direção certa
+- Corrigido: nas cartas dos jogadores dos lados (giradas 90°), o deslocamento da animação era girado junto e a carta ia para o lado errado. Agora usa a propriedade `translate`, independente da rotação, e cada carta vai exatamente ao lugar da outra.

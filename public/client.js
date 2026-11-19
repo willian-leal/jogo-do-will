@@ -555,9 +555,10 @@
     render();
     const dx = (B.r.left + B.r.width / 2) - (A.r.left + A.r.width / 2), dy = (B.r.top + B.r.height / 2) - (A.r.top + A.r.height / 2);
     const go = (G, sx, sy, from, to) => G.g.animate([
-      { transform: 'translate(0,0)', rotate: `${from}deg`, offset: 0 },
-      { transform: `translate(${sx * .5}px,${sy * .5 - 18}px)`, rotate: `${(from + to) / 2}deg`, offset: .5 },
-      { transform: `translate(${sx}px,${sy}px)`, rotate: `${to}deg`, offset: 1 }], { duration: total, easing: 'ease-in-out', fill: 'forwards' });
+      // a propriedade `translate` (não `transform`) para o deslocamento não ser girado junto com a carta dos lados
+      { translate: '0px 0px', rotate: `${from}deg`, offset: 0 },
+      { translate: `${sx * .5}px ${sy * .5 - 18}px`, rotate: `${(from + to) / 2}deg`, offset: .5 },
+      { translate: `${sx}px ${sy}px`, rotate: `${to}deg`, offset: 1 }], { duration: total, easing: 'ease-in-out', fill: 'forwards' });
     go(A, dx, dy, A.rot, B.rot); const an = go(B, -dx, -dy, B.rot, A.rot);
     an.onfinish = () => { A.g.remove(); B.g.remove(); render(); };
     setTimeout(render, total + 80);
