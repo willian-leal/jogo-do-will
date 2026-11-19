@@ -237,6 +237,8 @@
     <select class="turnSel">${[[0, 'Sem limite'], [20, '20 s'], [30, '30 s'], [60, '60 s'], [90, '90 s']].map(([v, t]) => `<option value="${v}" ${S.turnTime === v ? 'selected' : ''}>${t}</option>`).join('')}</select></label>`;
   const paceSelHTML = () => `<label class="setrow">Ritmo
     <select class="paceSel">${[[0, 'Normal'], [1, 'Rápido (corte curto, 20 s)']].map(([v, t]) => `<option value="${v}" ${(S.fast ? 1 : 0) === v ? 'selected' : ''}>${t}</option>`).join('')}</select></label>`;
+  const minSelHTML = () => `<label class="setrow">Encerrar só após
+    <select class="minSel">${[[0, 'Livre (a qualquer momento)'], [1, '1 volta na mesa'], [2, '2 voltas na mesa'], [3, '3 voltas na mesa'], [5, '5 voltas na mesa']].map(([v, t]) => `<option value="${v}" ${S.minRounds === v ? 'selected' : ''}>${t}</option>`).join('')}</select></label>`;
   const roundsSelHTML = () => `<label class="setrow">Campeonato
     <select class="roundsSel" ${S.result && S.result.series && !S.result.series.done && S.phase === 'ended' ? 'disabled' : ''}>${[[1, 'Partida única'], [3, '3 rodadas'], [5, '5 rodadas']].map(([v, t]) => `<option value="${v}" ${S.rounds === v ? 'selected' : ''}>${t}</option>`).join('')}</select></label>`;
   const LEVEL_NAMES = { facil: 'Fácil', medio: 'Médio', dificil: 'Difícil' };
@@ -264,6 +266,7 @@
          ${turnSelHTML()}
          ${paceSelHTML()}
          ${roundsSelHTML()}
+         ${minSelHTML()}
          <label class="chk"><input type="checkbox" class="pubChk" ${S.public ? 'checked' : ''}> Sala pública (aparece na lista da tela inicial)</label>
          <button class="btn primary big" data-act="start" ${n < 2 ? 'disabled' : ''}>Iniciar partida</button>`
       : '';
@@ -375,7 +378,8 @@
       if (myTurn && S.sub === 'draw') {
         if (a11y.btns) a.push(`<button class="btn primary" data-act="draw">Comprar carta</button>`);
         if (a11y.btns && top) a.push('<button class="btn" data-act="takediscard">Pegar do descarte</button>');
-        a.push('<button class="btn danger" data-act="end">Encerrar partida</button>');
+        if (S.endLeft > 0) a.push(`<button class="btn" disabled>Encerrar libera em ${S.endLeft} turno${S.endLeft === 1 ? '' : 's'}</button>`);
+        else a.push('<button class="btn danger" data-act="end">Encerrar partida</button>');
       }
       if (myTurn && S.sub === 'action') {
         if (a11y.btns && S.drawnFrom !== 'discard') {
@@ -449,7 +453,7 @@
         <button class="btn" data-act="closeoverlay">Ver mesa</button>
         <button class="btn" data-act="away">Voltar ao início</button>
       </div>
-      ${host ? `<div class="stack">${turnSelHTML()}${paceSelHTML()}${roundsSelHTML()}</div>` : ''}</div>`;
+      ${host ? `<div class="stack">${turnSelHTML()}${paceSelHTML()}${roundsSelHTML()}${minSelHTML()}</div>` : ''}</div>`;
     $('#overlay').hidden = false;
   }
   function closeOverlay() { confirmingEnd = false; $('#overlay').hidden = true; $('#overlay').innerHTML = ''; }
@@ -793,6 +797,7 @@
     if (e.target.classList && e.target.classList.contains('turnSel')) send({ t: 'setting', turnTime: Number(e.target.value) });
     if (e.target.classList && e.target.classList.contains('paceSel')) send({ t: 'setting', fast: e.target.value === '1' });
     if (e.target.dataset && e.target.dataset.a11y) { a11y[e.target.dataset.a11y] = e.target.checked; localStorage.setItem('will_a11y', JSON.stringify(a11y)); applyA11y(); if (S) render(); }
+    if (e.target.classList && e.target.classList.contains('minSel')) send({ t: 'setting', minRounds: Number(e.target.value) });
     if (e.target.classList && e.target.classList.contains('roundsSel')) send({ t: 'setting', rounds: Number(e.target.value) });
   });
   document.addEventListener('keydown', (e) => {

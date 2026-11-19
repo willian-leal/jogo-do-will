@@ -6,7 +6,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const throws = (fn) => assert.throws(fn, (e) => e instanceof GameError);
 
 function mk(speed) {
-  const room = new Room('X', { speed });
+  const room = new Room('X', { speed, minRounds: 0 });
   const ps = [];
   for (let i = 0; i < 3; i++) { const p = room.addPlayer({ name: 'P' + i }); p.connected = true; p.sent = []; p.send = (m) => p.sent.push(m); ps.push(p); }
   return { room, ps };

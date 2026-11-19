@@ -132,3 +132,7 @@ Observação: as salas ficam em memória; reiniciar o servidor encerra as partid
 - "Encerrar partida" agora pede confirmação com uma janela do próprio jogo (em vez do `confirm()` do navegador).
 - Toque fora de hora não mostra mais o aviso "Ação inválida neste momento".
 - Rótulo da carta: "1 ponto" (singular) para o Ás.
+
+## v20 — Mínimo de voltas para encerrar
+- Nova configuração da sala ("Encerrar só após"): livre, 1, 2 (padrão), 3 ou 5 voltas completas na mesa. O anfitrião escolhe no lobby e entre partidas.
+- Antes disso o botão mostra "Encerrar libera em N turnos" e o servidor recusa o pedido; os bots também respeitam.

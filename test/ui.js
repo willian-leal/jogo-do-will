@@ -36,11 +36,11 @@ server.listen(0, async () => {
     const center = (s) => p.evaluate((q) => { const e = document.querySelector(q); if (!e) return null; const r = e.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; }, s);
     assert(!(await p.$('#actions [data-act=draw]')), 'botão de comprar não aparece por padrão');
     while (Date.now() - t0 < 90000) {
-      const st = await p.evaluate(() => ({ end: !!document.querySelector('#actions [data-act=end]'), skip: !!document.querySelector('#actions [data-act=skip]'), msg: document.querySelector('#msg').textContent, ended: !document.querySelector('#overlay').hidden && !!document.querySelector('#overlay .trophy') }));
+      const st = await p.evaluate(() => ({ end: !!document.querySelector('#actions [data-act=end], #actions button[disabled]'), canEnd: !!document.querySelector('#actions [data-act=end]'), skip: !!document.querySelector('#actions [data-act=skip]'), msg: document.querySelector('#msg').textContent, ended: !document.querySelector('#overlay').hidden && !!document.querySelector('#overlay .trophy') }));
       if (st.ended) break;
       if (/pegou do descarte/.test(st.msg)) { await click('#me .card:nth-child(3)'); await sleep(250); continue; }
       if (st.end) {                                   // minha vez, fase de comprar
-        if (turns > 3) { await click('#actions [data-act=end]'); await sleep(400); await click('#overlay [data-act=endyes]'); await sleep(1200); continue; }
+        if (turns > 3 && st.canEnd) { await click('#actions [data-act=end]'); await sleep(400); await click('#overlay [data-act=endyes]'); await sleep(1200); continue; }
         turns++;
         if (turns === 2 && !tookDiscard && await p.$('#discardPile .card:not(.slot)')) { tookDiscard++; await click('#discardPile .card'); await sleep(2600); continue; }
         if (turns === 3 && !dragged) {

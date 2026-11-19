@@ -61,6 +61,8 @@ class Room {
     this.gameNo = 0;
     this.turnTime = 0;                      // segundos por turno (0 = sem limite)
     this.rounds = 1;                        // rodadas do campeonato (1 = partida única)
+    this.minRounds = opts.minRounds ?? 2;                     // voltas completas na mesa antes de poder encerrar (0 = livre)
+    this.turnsDone = 0;
     this.fast = false;                      // mesa rápida: janela de corte menor + 20 s por turno
     this.seriesRounds = 1; this.roundNo = 0; this.totals = {}; this.seriesIds = [];
     this.deadline = 0;
@@ -181,7 +183,7 @@ class Room {
     }
     for (let i = 0; i < 4; i++) for (const p of parts) p.hand.push(this.draw.pop());
     for (const p of parts) p.peeksLeft = 2;
-    this.gameNo++; this.roundNo++;
+    this.gameNo++; this.roundNo++; this.turnsDone = 0;
     this.phase = 'peek'; this.sub = null; this.pending = null; this.cutWindow = null; this.result = null;
     this.log = [];
     this.logMsg(isExtra ? 'Rodada extra entre os empatados!' : this.seriesRounds > 1 ? `Rodada ${this.roundNo} de ${this.seriesRounds} — ${parts.length} jogadores, ${this.decks} baralho(s).` : `Nova partida com ${parts.length} jogadores e ${this.decks} baralho(s).`);
@@ -265,6 +267,11 @@ class Room {
       if (this.fast && (this.turnTime === 0 || this.turnTime > 20)) this.turnTime = 20;
       this.logMsg(this.fast ? 'Mesa rápida: janela de corte menor e 20 s por turno.' : 'Ritmo normal.');
     }
+    if (st.minRounds !== undefined) {
+      if (![0, 1, 2, 3, 5].includes(st.minRounds)) fail('Valor inválido.');
+      this.minRounds = st.minRounds;
+      this.logMsg(st.minRounds ? `Só dá para encerrar depois de ${st.minRounds} volta${st.minRounds === 1 ? '' : 's'} completa${st.minRounds === 1 ? '' : 's'} na mesa.` : 'Encerramento livre a qualquer momento.');
+    }
     if (st.rounds !== undefined) {
       if (![1, 3, 5].includes(st.rounds)) fail('Valor inválido.');
       if (this.seriesInProgress()) fail('Termine o campeonato em andamento antes de mudar as rodadas.');
@@ -283,6 +290,7 @@ class Room {
     this.broadcast();
   }
   advanceTurn() {
+    this.turnsDone++;
     this.turnIdx = (this.turnIdx + 1) % this.parts().length;
     this.beginTurn();
   }
@@ -426,8 +434,11 @@ class Room {
   }
 
   /* ------------------------------ encerramento ----------------------------- */
+  endLeft() { return Math.max(0, this.minRounds * this.parts().length - this.turnsDone); }
   endVoluntary(pid) {
     this.need(pid, 'draw'); // antes de comprar ou descartar
+    const left = this.endLeft();
+    if (left > 0) fail(`Só dá para encerrar depois de ${this.minRounds} volta${this.minRounds === 1 ? '' : 's'} na mesa (faltam ${left} turno${left === 1 ? '' : 's'}).`);
     this.logMsg(`${this.byId(pid).name} anunciou o encerramento da partida!`);
     this.endGame('voluntary', pid);
   }
@@ -486,7 +497,7 @@ class Room {
         case 'skip': this.skipPower(p.id); break;
         case 'cut': this.cut(p.id, m.cardId | 0); break;
         case 'end': this.endVoluntary(p.id); break;
-        case 'setting': this.setting(p.id, { turnTime: m.turnTime === undefined ? undefined : m.turnTime | 0, rounds: m.rounds === undefined ? undefined : m.rounds | 0, fast: m.fast === undefined ? undefined : !!m.fast, public: m.public === undefined ? undefined : !!m.public }); break;
+        case 'setting': this.setting(p.id, { turnTime: m.turnTime === undefined ? undefined : m.turnTime | 0, rounds: m.rounds === undefined ? undefined : m.rounds | 0, fast: m.fast === undefined ? undefined : !!m.fast, public: m.public === undefined ? undefined : !!m.public, minRounds: m.minRounds === undefined ? undefined : m.minRounds | 0 }); break;
         case 'react': this.react(p, String(m.emoji)); break;
         default: break;
       }
@@ -509,7 +520,7 @@ class Room {
         hand: p.hand.map((id) => (ended && p.inGame ? pub(this.cards.get(id)) : { id })),
         peeksLeft: p.id === v.id ? p.peeksLeft : undefined,
       })),
-      turnTime: this.turnTime, fast: this.fast, public: this.public, lockFull: this.LOCK / this.speed, rounds: this.rounds, roundNo: this.roundNo, seriesRounds: this.seriesRounds, totals: this.seriesRounds > 1 ? this.totals : null,
+      turnTime: this.turnTime, fast: this.fast, public: this.public, minRounds: this.minRounds, endLeft: this.endLeft(), lockFull: this.LOCK / this.speed, rounds: this.rounds, roundNo: this.roundNo, seriesRounds: this.seriesRounds, totals: this.seriesRounds > 1 ? this.totals : null,
       turnMs: this.deadline ? Math.max(0, Math.ceil((this.deadline - Date.now()) / this.speed)) : 0,
       turn: cur ? cur.id : null,
       sub: this.phase === 'play' ? this.sub : null,
@@ -593,7 +604,7 @@ class Room {
       this.after(wait, () => {
         if (!still()) return;
         run(() => {
-          if (cur.bot && Bot.shouldEnd(cur)) return this.endVoluntary(cur.id);
+          if (cur.bot && this.endLeft() === 0 && Bot.shouldEnd(cur)) return this.endVoluntary(cur.id);
           if (cur.bot && Bot.wantDiscard(this, cur)) return this.takeDiscard(cur.id);
           return this.doDraw(cur.id);
         });

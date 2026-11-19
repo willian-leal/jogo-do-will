@@ -4,7 +4,7 @@ const assert = require('assert');
 const { Room, GameError, points } = require('../game');
 
 function setup(n = 3, speed = 0.0001) {
-  const room = new Room('R', { speed });
+  const room = new Room('R', { speed, minRounds: 0 });
   const ps = [];
   for (let i = 0; i < n; i++) { const p = room.addPlayer({ name: 'P' + i }); p.connected = true; p.sent = []; p.send = (m) => p.sent.push(m); ps.push(p); }
   room.startGame(ps.map((p) => p.id));
@@ -30,7 +30,7 @@ assert.strictEqual(points({ rank: '10', suit: 'D' }), 10);
 
 // 2. preparação: 4 cartas cada, só 2 espiadas, 1 baralho p/ 2 jogadores e 2 p/ 3+
 {
-  const room = new Room('P', { speed: 0.0001 });
+  const room = new Room('P', { speed: 0.0001, minRounds: 0 });
   const a = room.addPlayer({ name: 'A' }), b = room.addPlayer({ name: 'B' });
   a.connected = b.connected = true; a.send = b.send = () => {};
   room.startGame([a.id, b.id]);
@@ -269,3 +269,20 @@ assert.strictEqual(points({ rank: '10', suit: 'D' }), 10);
   room.checkInvariant();
 }
 console.log('OK: regras do manual (13 grupos de verificações).');
+
+// 14. mínimo de voltas para encerrar
+{
+  const { room, ps } = setup(3);
+  room.minRounds = 2;                       // 2 voltas x 3 jogadores = 6 turnos
+  room.turnsDone = 0;
+  throws(() => room.endVoluntary(ps[0].id), /volta/);
+  assert.strictEqual(room.endLeft(), 6);
+  room.turnsDone = 5; assert.strictEqual(room.endLeft(), 1);
+  room.turnsDone = 6; assert.strictEqual(room.endLeft(), 0);
+  room.endVoluntary(ps[0].id);
+  assert.strictEqual(room.phase, 'ended');
+  const { room: r2, ps: q } = setup(2);
+  r2.minRounds = 0; r2.turnsDone = 0; r2.endVoluntary(q[0].id);   // livre
+  assert.strictEqual(r2.phase, 'ended');
+  console.log('OK: mínimo de voltas para encerrar.');
+}
