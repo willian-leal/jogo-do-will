@@ -114,7 +114,8 @@ input:focus{box-shadow:0 0 0 3px rgba(232,184,74,.6)}
 .card.cutmode{box-shadow:0 0 0 3px var(--red);cursor:crosshair}
 
 .note{display:flex;align-items:center;gap:8px;justify-content:center;font-weight:600;font-size:.88rem;padding:8px 14px;margin:0 auto;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.22);border-radius:999px;max-width:94%;text-align:center}
-.board .note{position:absolute;left:0;right:0;bottom:2px;width:max-content;z-index:5;pointer-events:none;box-shadow:0 4px 14px rgba(0,0,0,.35)} /* sobreposto: não empurra a mão (evita toque no lugar errado) */
+.noteslot{min-height:36px;display:flex;align-items:center;justify-content:center;pointer-events:none} /* faixa fixa no topo: reserva a altura, então não desloca a mesa nem cobre cartas */
+.noteslot .note{font-size:.82rem;padding:5px 12px;max-width:100%}
 .note.in{animation:noteIn .35s ease-out}
 @keyframes noteIn{from{transform:translateY(-6px);opacity:0}to{transform:none;opacity:1}}
 .msg{text-align:center;font-weight:600;min-height:1.4em;padding:4px 8px;font-size:1.02rem;line-height:1.35}

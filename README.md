@@ -159,3 +159,7 @@ Observação: as salas ficam em memória; reiniciar o servidor encerra as partid
 ## v31 — Bots só encerram com certeza
 - O bot encerra apenas se a soma estimada dele + uma folga ficar abaixo da estimativa pessimista de **todos** os adversários (carta que ele nunca viu conta 4,5). Quanto mais alto o nível, mais exigente (Expert/Difícil não encerram com carta própria desconhecida).
 - Teste de auditoria (`test/bots.js`): em partidas completas só entre bots, toda leitura de valor de carta feita pelas funções de decisão precisa ser da carta comprada ou do topo do descarte. Os bots só sabem o que viram.
+
+## v32 — Mesa com muita gente no celular + legenda fora do centro
+- A partir de 5 adversários, mais jogadores vão para as laterais (ex.: 5 = 2 esquerda, 1 frente, 2 direita), como na tela de resultado.
+- A legenda que narra as jogadas agora fica numa faixa fixa logo abaixo do placar (altura reservada, não cobre nem empurra a mesa).
