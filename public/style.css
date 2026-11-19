@@ -278,5 +278,8 @@ html.hc .droptarget{outline-width:3px}
   .board.many .center .card,.board.many .center .dstack{--card-w:46px;--card-h:65px}
 }
 
-.fxtag{position:fixed;transform:translate(-50%,-100%);z-index:41;pointer-events:none;background:rgba(0,0,0,.78);border:2px solid var(--gold);color:#fff;font-weight:700;font-size:.9rem;padding:4px 12px;border-radius:999px;white-space:nowrap}
-.fxtag.peek{border-color:var(--blue)}
+.card.peekeye{box-shadow:0 0 0 3px var(--blue)}
+.card.peekeye::after{content:'';position:absolute;left:50%;top:50%;translate:-50% -50%;width:calc(var(--card-w)*.62);height:calc(var(--card-w)*.62);background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z' fill='white' stroke='%23102a20' stroke-width='1.6'/%3E%3Ccircle cx='12' cy='12' r='3.6' fill='%233b8de0' stroke='%23102a20' stroke-width='1.2'/%3E%3C/svg%3E") center/contain no-repeat;z-index:4;filter:drop-shadow(0 1px 3px rgba(0,0,0,.6))}
+.seat-l .opp .card.peekeye::after{rotate:-90deg}
+.seat-r .opp .card.peekeye::after{rotate:90deg}
+.card:not(.back).peekeye::after{left:auto;right:3px;top:3px;translate:none;width:calc(var(--card-w)*.32);height:calc(var(--card-w)*.32)}

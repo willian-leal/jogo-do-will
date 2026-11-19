@@ -155,3 +155,7 @@ Observação: as salas ficam em memória; reiniciar o servidor encerra as partid
 - Com "Reduzir animações" ligado, volta ao destaque simples + marcas.
 
 ## v25 — Removidas as marcas ⇄ / 👁 das cartas; ficam a animação, o aviso com a posição e o histórico.
+
+## v26 — Poderes mais discretos
+- Dama e 10: sem ampliar a carta; só um olho azul sobre a carta olhada, na mesma posição e direção em que ela está (cartas dos lados continuam deitadas).
+- Valete: as duas cartas, do tamanho normal e na direção de cada lugar, trocam de lugar em 1,5 s, sem aviso extra nem ampliação.

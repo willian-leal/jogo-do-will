@@ -535,61 +535,38 @@
     an.onfinish = () => el.remove();
   }
   /* ---- animações dos poderes (no momento da ação) ---- */
-  const cardRect = (id) => { const e = document.querySelector(`[data-cid="${id}"]`); return e ? e.getBoundingClientRect() : null; };
-  function ghostCard(r, face, extra = '') {
-    const el = document.createElement('div');
-    el.innerHTML = cardHTML(face || { id: 0 });
-    const g = el.firstChild;
-    const w = 70, h = 98;
-    g.style.cssText = `position:fixed;left:${r.left + r.width / 2 - w / 2}px;top:${r.top + r.height / 2 - h / 2}px;z-index:40;pointer-events:none;--card-w:${w}px;--card-h:${h}px;box-shadow:0 0 0 4px var(--gold),0 14px 30px rgba(0,0,0,.55);${extra}`;
+  const cardEl = (id) => document.querySelector(`[data-cid="${id}"]`);
+  const rotOf = (el) => (el.closest('.seat-l') ? 90 : el.closest('.seat-r') ? -90 : 0);   // cartas dos lados ficam viradas para o jogador
+  function ghostCard(el) {
+    const r = el.getBoundingClientRect(), w = el.offsetWidth, h = el.offsetHeight, rot = rotOf(el);
+    const holder = document.createElement('div'); holder.innerHTML = cardHTML({ id: 0 });
+    const g = holder.firstChild;
+    g.style.cssText = `position:fixed;left:${r.left + r.width / 2 - w / 2}px;top:${r.top + r.height / 2 - h / 2}px;width:${w}px;height:${h}px;--card-w:${w}px;--card-h:${h}px;z-index:40;pointer-events:none;margin:0;rotate:${rot}deg;box-shadow:0 0 0 3px var(--gold),0 8px 18px rgba(0,0,0,.5)`;
     document.body.appendChild(g);
-    return g;
+    return { g, r, rot };
   }
-  const tag = (r, text, cls) => {
-    const t = document.createElement('div'); t.className = 'fxtag ' + (cls || ''); t.textContent = text;
-    t.style.cssText = `left:${r.left + r.width / 2}px;top:${r.top - 14}px`;
-    document.body.appendChild(t); return t;
-  };
-  // Valete: as duas cartas são levantadas, mostram-se uma à outra e cruzam a mesa
-  function swapAnim(t0, t1, who) {
-    const rA = cardRect(t0.cardId), rB = cardRect(t1.cardId);        // posições novas: a carta b já está onde a estava
-    if (!rA || !rB || a11y.rm) return false;
-    const total = 2400;
+  // Valete: as duas cartas (do tamanho normal, na posição em que estão) trocam de lugar
+  function swapAnim(t0, t1) {
+    const eA = cardEl(t0.cardId), eB = cardEl(t1.cardId);        // posições novas: a carta b já está onde a estava
+    if (!eA || !eB || a11y.rm) return false;
+    const total = 1500;
     hold[t0.cardId] = hold[t1.cardId] = Date.now() + total + 60;
+    const A = ghostCard(eA), B = ghostCard(eB);                    // A: onde a carta b está agora (origem da carta a)
     render();
-    const gA = ghostCard(rA, null), gB = ghostCard(rB, null);          // gA: onde a carta b está agora (origem da carta a)
-    const tg = tag({ left: Math.min(rA.left, rB.left), width: Math.abs(rA.left - rB.left) + rA.width, top: Math.min(rA.top, rB.top) }, `${who} troca duas cartas`, 'swap');
-    const dx = (rB.left + rB.width / 2) - (rA.left + rA.width / 2), dy = (rB.top + rB.height / 2) - (rA.top + rA.height / 2);
-    const arc = (sx, sy) => [
-      { transform: 'translate(0,0) scale(.8)', offset: 0 },
-      { transform: 'translate(0,0) scale(1.35) rotate(-4deg)', offset: .32 },
-      { transform: 'translate(0,0) scale(1.35) rotate(-4deg)', offset: .42 },
-      { transform: `translate(${sx * .5}px,${sy * .5 - 40}px) scale(1.5) rotate(6deg)`, offset: .7 },
-      { transform: `translate(${sx}px,${sy}px) scale(1.2) rotate(0)`, offset: .92 },
-      { transform: `translate(${sx}px,${sy}px) scale(1)`, offset: 1 }];
-    const o = { duration: total, easing: 'ease-in-out', fill: 'forwards' };
-    gA.animate(arc(dx, dy), o); const aB = gB.animate(arc(-dx, -dy), o);
-    aB.onfinish = () => { gA.remove(); gB.remove(); tg.remove(); render(); };
+    const dx = (B.r.left + B.r.width / 2) - (A.r.left + A.r.width / 2), dy = (B.r.top + B.r.height / 2) - (A.r.top + A.r.height / 2);
+    const go = (G, sx, sy, from, to) => G.g.animate([
+      { transform: 'translate(0,0)', rotate: `${from}deg`, offset: 0 },
+      { transform: `translate(${sx * .5}px,${sy * .5 - 18}px)`, rotate: `${(from + to) / 2}deg`, offset: .5 },
+      { transform: `translate(${sx}px,${sy}px)`, rotate: `${to}deg`, offset: 1 }], { duration: total, easing: 'ease-in-out', fill: 'forwards' });
+    go(A, dx, dy, A.rot, B.rot); const an = go(B, -dx, -dy, B.rot, A.rot);
+    an.onfinish = () => { A.g.remove(); B.g.remove(); render(); };
     setTimeout(render, total + 80);
     return true;
   }
-  // Dama (e 10): a carta é levantada e destacada para todos; quem espiou vê a face
-  function peekAnim(target, who, own) {
-    const r = cardRect(target.cardId);
-    if (!r || a11y.rm) return false;
-    const total = 2200;
-    hold[target.cardId] = Date.now() + total + 60;
-    const face = revealOf(target.cardId);
-    render();
-    const g = ghostCard(r, face || null, 'box-shadow:0 0 0 4px var(--blue),0 14px 30px rgba(0,0,0,.55);');
-    const tg = tag(r, own ? `${who} revê a própria carta` : `${who} olha esta carta`, 'peek');
-    const an = g.animate([
-      { transform: 'translate(0,0) scale(.9)', offset: 0 },
-      { transform: 'translate(0,-34px) scale(1.7)', offset: .22 },
-      { transform: 'translate(0,-34px) scale(1.7)', offset: .8 },
-      { transform: 'translate(0,0) scale(1)', offset: 1 }], { duration: total, easing: 'ease-in-out', fill: 'forwards' });
-    an.onfinish = () => { g.remove(); tg.remove(); render(); };
-    setTimeout(render, total + 80);
+  // Dama e 10: um olho azul na carta que está sendo olhada (na mesma posição e direção em que ela está)
+  function peekAnim(target) {
+    if (!cardEl(target.cardId)) return false;
+    flash(target.cardId, 'peekeye', 2200);
     return true;
   }
   let wasMyTurn = false, confirmingEnd = false;
@@ -653,13 +630,13 @@
         SFX.power();
         const t = f.targets;
         const pos = (x) => { const n = slotOf(x.owner, x.cardId); return n ? `${n}ª carta ${x.owner === S.you ? 'sua' : 'de ' + nameOf(x.owner)}` : 'uma carta'; };
-        if (f.type === '10') { note(`${who} usou o 10 e revisou a ${pos(t[0])}`, 'eye', 5000); if (!peekAnim(t[0], who, true)) flash(t[0].cardId, 'spy', 1800); }
+        if (f.type === '10') { note(`${who} usou o 10 e revisou a ${pos(t[0])}`, 'eye', 5000); if (!peekAnim(t[0])) flash(t[0].cardId, 'spy', 1800); }
         else if (f.type === 'Q') {
           note(`${who} usou a Dama e espiou a ${pos(t[0])}`, 'eye', 7000);
-          if (!peekAnim(t[0], who, false)) flash(t[0].cardId, 'spy', 1800);
+          if (!peekAnim(t[0])) flash(t[0].cardId, 'spy', 1800);
         } else {
           note(`${who} usou o Valete: trocou a ${pos(t[0])} com a ${pos(t[1])}`, 'swap', 7000);
-          if (!swapAnim(t[0], t[1], who)) { flash(t[0].cardId, 'swapfx', 2200); flash(t[1].cardId, 'swapfx', 2200); }
+          if (!swapAnim(t[0], t[1])) { flash(t[0].cardId, 'swapfx', 2200); flash(t[1].cardId, 'swapfx', 2200); }
         }
       }
     }
