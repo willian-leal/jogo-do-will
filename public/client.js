@@ -243,7 +243,7 @@
     <select class="minSel">${[[0, 'Livre (a qualquer momento)'], [1, '1 volta na mesa'], [2, '2 voltas na mesa'], [3, '3 voltas na mesa'], [5, '5 voltas na mesa']].map(([v, t]) => `<option value="${v}" ${S.minRounds === v ? 'selected' : ''}>${t}</option>`).join('')}</select></label>`;
   const roundsSelHTML = () => `<label class="setrow">Campeonato
     <select class="roundsSel" ${S.result && S.result.series && !S.result.series.done && S.phase === 'ended' ? 'disabled' : ''}>${[[1, 'Partida única'], [3, '3 rodadas'], [5, '5 rodadas']].map(([v, t]) => `<option value="${v}" ${S.rounds === v ? 'selected' : ''}>${t}</option>`).join('')}</select></label>`;
-  const LEVEL_NAMES = { facil: 'Fácil', medio: 'Médio', dificil: 'Difícil' };
+  const LEVEL_NAMES = { facil: 'Fácil', medio: 'Médio', dificil: 'Difícil', expert: 'Expert' };
   const powerText = { 10: 'o 10: olhe novamente uma das suas cartas', Q: 'a Dama: espie uma carta de outro jogador', J: 'o Valete: troque duas cartas, sem olhar (de jogadores diferentes)' };
 
   /* -------------------------------- render -------------------------------- */

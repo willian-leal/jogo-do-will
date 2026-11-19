@@ -165,3 +165,13 @@ Observação: as salas ficam em memória; reiniciar o servidor encerra as partid
 
 ## v28 — Carta comprada/descartada chega virada para o jogador
 - As cartas que voam (compra, pegar do descarte, descarte, corte) giram para a direção do assento de destino/origem: viradas 90° para quem está nos lados, em pé para você e para quem está na frente.
+
+## v29 — Bot Expert e estratégias de jogo
+- Novo nível **Expert** (memória quase perfeita, corta em 0,4–1 s, encerra com mais decisão).
+- Estratégia (Difícil e Expert):
+  - Dama: espia uma carta ainda desconhecida de quem tem menos cartas.
+  - Carta de poder útil (10, Dama, Valete) é descartada para usar o poder em vez de guardada.
+  - Valete (Difícil): entrega a carta alta que conhece a quem tem menos cartas.
+  - Valete (Expert): (1) leva uma carta baixa de adversário que sabe onde está; (2) entrega carta alta a quem tem 2 cartas ou menos; (3) sem carta alta, embaralha a mão de quem está perto de acabar com a de outro adversário.
+  - Expert encerra antes quando alguém está a ≤2 cartas e a mão dele é razoável; nunca encerra com mão ruim.
+- Benchmark (400 partidas, 1 bot de cada nível): vitórias Fácil 5%, Médio 17%, Difícil 33%, Expert 44%.

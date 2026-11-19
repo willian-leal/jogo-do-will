@@ -2,13 +2,13 @@
 // Simula partidas completas só com bots e verifica invariantes (nenhuma carta some ou duplica).
 const { Room, points } = require('../game');
 const assert = require('assert');
-const LV = ['facil', 'medio', 'dificil'];
+const LV = ['facil', 'medio', 'dificil', 'expert'];
 
 function playOne(n, i) {
   return new Promise((resolve, reject) => {
     const room = new Room('T' + i, { speed: 0.004, onChange: (r) => { try { r.checkInvariant(); } catch (e) { reject(e); } } });
     const ps = [];
-    for (let k = 0; k < n; k++) ps.push(room.addPlayer({ name: 'B' + k, bot: true, level: LV[(k + i) % 3] }));
+    for (let k = 0; k < n; k++) ps.push(room.addPlayer({ name: 'B' + k, bot: true, level: LV[(k + i) % 4] }));
     room.hostId = ps[0].id;
     const t0 = Date.now();
     room.startGame(ps.map((p) => p.id));

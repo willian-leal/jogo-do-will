@@ -604,7 +604,7 @@ class Room {
       this.after(wait, () => {
         if (!still()) return;
         run(() => {
-          if (cur.bot && this.endLeft() === 0 && Bot.shouldEnd(cur)) return this.endVoluntary(cur.id);
+          if (cur.bot && this.endLeft() === 0 && Bot.shouldEnd(cur, this)) return this.endVoluntary(cur.id);
           if (cur.bot && Bot.wantDiscard(this, cur)) return this.takeDiscard(cur.id);
           return this.doDraw(cur.id);
         });
