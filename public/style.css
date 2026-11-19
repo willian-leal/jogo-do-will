@@ -161,13 +161,6 @@ select option{color:#111}
 .card.cutready:hover{box-shadow:0 0 0 3px var(--red),0 6px 14px rgba(0,0,0,.4);transform:translateY(-4px);cursor:crosshair}
 .card.flash{animation:flash 1.5s ease-out;box-shadow:0 0 0 3px #7ee787}
 .card.spy{animation:flash 1.8s ease-out;box-shadow:0 0 0 3px var(--blue)}
-.card.mk::after{content:attr(data-mk);position:absolute;right:-5px;top:-7px;min-width:calc(var(--card-w)*.42);height:calc(var(--card-w)*.42);padding:0 2px;border-radius:999px;display:flex;align-items:center;justify-content:center;font:700 calc(var(--card-w)*.26)/1 system-ui,sans-serif;z-index:4;box-shadow:0 1px 4px rgba(0,0,0,.5);color:#0b1d15}
-.card.mk-spied::after{background:var(--blue)}
-.card.mk-swapped::after{background:var(--gold)}
-.card.mk-spied{box-shadow:0 0 0 3px var(--blue)}
-.card.mk-swapped{box-shadow:0 0 0 3px var(--gold)}
-.me .card.mk::after{min-width:26px;height:26px;font-size:15px;right:-6px;top:-8px}
-.seat-l .opp .card.mk::after,.seat-r .opp .card.mk::after{rotate:90deg}
 .card.swapfx{animation:flash 2.2s ease-out;box-shadow:0 0 0 3px var(--gold)}
 @keyframes flash{0%,40%{transform:translateY(-8px) scale(1.08)}100%{transform:none}}
 .timer{display:inline-flex;align-items:center;gap:4px;background:rgba(0,0,0,.4);border-radius:999px;padding:1px 8px;font-size:.78rem;font-weight:700;font-variant-numeric:tabular-nums}

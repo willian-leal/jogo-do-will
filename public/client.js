@@ -59,7 +59,6 @@
   let lockTimer = null;
   let LOCK_FULL = 2200;       // mesmo valor do servidor (tempo mínimo antes do próximo comprar)
   let fxQueue = [];
-  const marks = {};             // cardId -> { kind: 'spied'|'swapped', who, until } (marcas dos poderes Q e J)
   const hold = {};              // cardId -> até quando a carta real fica escondida enquanto a animação de poder roda
   const flashes = {};           // cardId -> { until, cls }
   let ghostTop = { id: null, until: 0 };
@@ -230,15 +229,9 @@
     if (hold[info.id] > Date.now()) cls.push('ghost');
     const fl = flashes[info.id];
     if (fl && fl.until > Date.now()) cls.push(fl.cls);
-    const mk = marks[info.id];
-    let mkAttr = '';
-    if (mk && mk.until > Date.now()) {
-      cls.push('mk', 'mk-' + mk.kind);
-      mkAttr = ` data-mk="${mk.kind === 'spied' ? '👁' : '⇄'}" title="${mk.kind === 'spied' ? esc(mk.who) + ' olhou esta carta' : 'Carta trocada pelo Valete'}"`;
-    }
     const label = known ? `${known.rank} de ${SUIT_NAMES[known.suit]}, ${known.pts} ${known.pts === 1 ? 'ponto' : 'pontos'}` : 'carta virada';
     const data = info.id != null && o.owner ? ` data-cid="${info.id}" data-owner="${o.owner}" tabindex="0" role="button" aria-label="${label}"` : (known ? ` role="img" aria-label="${label}"` : '');
-    return `<div class="${cls.join(' ')}"${data}${mkAttr}>${inner}</div>`;
+    return `<div class="${cls.join(' ')}"${data}>${inner}</div>`;
   }
   const me = () => S.players.find((p) => p.id === S.you);
   const nameOf = (id) => { const p = S.players.find((x) => x.id === id); return p ? p.name : '?'; };
@@ -311,7 +304,6 @@
     wasMyTurn = myTurn;
     const opps = S.players.filter((p) => p.inGame && p.id !== S.you);
     $('#board').classList.toggle('many', opps.length >= 5);
-    { const mine = new Set((me() ? me().hand : []).map((x) => x.id)); for (const id of Object.keys(marks)) { const m = marks[id]; if (S.phase === 'lobby' || S.phase === 'ended' || (m.until === Infinity && !mine.has(Number(id)))) delete marks[id]; } }
     const specs = !playing ? S.players.filter((p) => p.inGame) : opps;
 
     /* oponentes */
@@ -604,11 +596,6 @@
   const cutFx = {};   // destaque de quem cortou (verde) ou errou (vermelho) na caixa do jogador
   function markCut(pid, ok) { cutFx[pid] = { until: Date.now() + 1600, ok }; setTimeout(render, 1650); }
   const cutCls = (pid) => { const x = cutFx[pid]; return x && x.until > Date.now() ? (x.ok ? 'cutok' : 'cutbad') : ''; };
-  // marca fixa numa carta: nas suas, fica até a carta sair da sua mão; nas dos outros, some depois de 20 s
-  function mark(cardId, owner, kind, who) {
-    marks[cardId] = { kind, who, until: owner === S.you ? Infinity : Date.now() + 20000 };
-    if (owner !== S.you) setTimeout(render, 20040);
-  }
   const slotOf = (owner, cardId) => { const p = S.players.find((x) => x.id === owner); return p ? p.hand.findIndex((c) => c.id === cardId) + 1 : 0; };
   function flash(cardId, cls, ms) {
     flashes[cardId] = { until: Date.now() + ms, cls };
@@ -668,11 +655,10 @@
         const pos = (x) => { const n = slotOf(x.owner, x.cardId); return n ? `${n}ª carta ${x.owner === S.you ? 'sua' : 'de ' + nameOf(x.owner)}` : 'uma carta'; };
         if (f.type === '10') { note(`${who} usou o 10 e revisou a ${pos(t[0])}`, 'eye', 5000); if (!peekAnim(t[0], who, true)) flash(t[0].cardId, 'spy', 1800); }
         else if (f.type === 'Q') {
-          note(`${who} usou a Dama e espiou a ${pos(t[0])}`, 'eye', 7000); mark(t[0].cardId, t[0].owner, 'spied', who);
+          note(`${who} usou a Dama e espiou a ${pos(t[0])}`, 'eye', 7000);
           if (!peekAnim(t[0], who, false)) flash(t[0].cardId, 'spy', 1800);
         } else {
           note(`${who} usou o Valete: trocou a ${pos(t[0])} com a ${pos(t[1])}`, 'swap', 7000);
-          mark(t[0].cardId, t[0].owner, 'swapped', who); mark(t[1].cardId, t[1].owner, 'swapped', who);
           if (!swapAnim(t[0], t[1], who)) { flash(t[0].cardId, 'swapfx', 2200); flash(t[1].cardId, 'swapfx', 2200); }
         }
       }

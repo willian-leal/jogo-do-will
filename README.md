@@ -145,8 +145,7 @@ Observação: as salas ficam em memória; reiniciar o servidor encerra as partid
 - O aviso temporário ("Fulano cortou…", "errou o corte…") ficava entre a mesa e a mão e, ao aparecer/sumir, empurrava os botões e as cartas ~45 px. Um toque feito no instante em que ele sumia acertava uma carta da mão e virava um corte errado (carta de punição). Agora o aviso flutua sobre a base da mesa, sem ocupar espaço.
 
 ## v23 — Poderes do Valete e da Dama visíveis
-- Valete (J): as duas cartas trocadas ganham a marca ⇄ (dourada); Dama (Q): a carta espiada ganha a marca 👁 (azul) com o nome de quem olhou no toque/passar o mouse.
-- Nas suas cartas a marca fica até a carta sair da sua mão; nas dos adversários dura 20 s.
+- (As marcas ⇄/👁 nas cartas foram removidas na v25: ficou só a animação da v24.)
 - O aviso diz a posição: "Bia usou o Valete: trocou a 2ª carta sua com a 3ª carta de Caio" / "…espiou a 3ª carta sua" (7 s), e o histórico traz as mesmas posições.
 - Correção: o destaque dos poderes não aparecia porque a tela só era redesenhada depois de a animação acabar.
 
@@ -154,3 +153,5 @@ Observação: as salas ficam em memória; reiniciar o servidor encerra as partid
 - Valete: as duas cartas escolhidas somem dos lugares, aparecem ampliadas (douradas) com o aviso "Fulano troca duas cartas", cruzam a mesa uma para o lugar da outra e só então reaparecem no lugar novo, com a marca ⇄.
 - Dama e 10: a carta alvo é levantada e ampliada (azul) com "Fulano olha esta carta" para todos; quem espiou a vê de frente.
 - Com "Reduzir animações" ligado, volta ao destaque simples + marcas.
+
+## v25 — Removidas as marcas ⇄ / 👁 das cartas; ficam a animação, o aviso com a posição e o histórico.
