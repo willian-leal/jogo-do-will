@@ -252,3 +252,7 @@ html.hc .droptarget{outline-width:3px}
 @media (min-width:561px){
   .seat-l .opp,.seat-r .opp{max-width:150px}
 }
+
+.roomlist .empty{justify-content:center;color:var(--soft);font-size:.9rem}
+.roomlist small{color:var(--soft);font-weight:500}
+.roomlist .btn{min-height:40px;padding:6px 14px}

@@ -67,6 +67,7 @@ class Room {
     this.wins = {};
     this.lastReact = {};
     this.lastActivity = Date.now();
+    this.public = false;                    // aparece na lista de salas abertas da tela inicial
     this.destroyed = false;
   }
 
@@ -254,6 +255,10 @@ class Room {
       if (![0, 20, 30, 60, 90].includes(st.turnTime)) fail('Valor inválido.');
       this.turnTime = st.turnTime;
       this.logMsg(st.turnTime ? `Tempo por turno: ${st.turnTime}s.` : 'Sem limite de tempo por turno.');
+    }
+    if (st.public !== undefined) {
+      this.public = !!st.public;
+      this.logMsg(this.public ? 'Sala pública: aparece na lista de salas abertas.' : 'Sala privada: só entra quem tem o código ou o link.');
     }
     if (st.fast !== undefined) {
       this.fast = !!st.fast;
@@ -481,7 +486,7 @@ class Room {
         case 'skip': this.skipPower(p.id); break;
         case 'cut': this.cut(p.id, m.cardId | 0); break;
         case 'end': this.endVoluntary(p.id); break;
-        case 'setting': this.setting(p.id, { turnTime: m.turnTime === undefined ? undefined : m.turnTime | 0, rounds: m.rounds === undefined ? undefined : m.rounds | 0, fast: m.fast === undefined ? undefined : !!m.fast }); break;
+        case 'setting': this.setting(p.id, { turnTime: m.turnTime === undefined ? undefined : m.turnTime | 0, rounds: m.rounds === undefined ? undefined : m.rounds | 0, fast: m.fast === undefined ? undefined : !!m.fast, public: m.public === undefined ? undefined : !!m.public }); break;
         case 'react': this.react(p, String(m.emoji)); break;
         default: break;
       }
@@ -504,7 +509,7 @@ class Room {
         hand: p.hand.map((id) => (ended && p.inGame ? pub(this.cards.get(id)) : { id })),
         peeksLeft: p.id === v.id ? p.peeksLeft : undefined,
       })),
-      turnTime: this.turnTime, fast: this.fast, lockFull: this.LOCK / this.speed, rounds: this.rounds, roundNo: this.roundNo, seriesRounds: this.seriesRounds,
+      turnTime: this.turnTime, fast: this.fast, public: this.public, lockFull: this.LOCK / this.speed, rounds: this.rounds, roundNo: this.roundNo, seriesRounds: this.seriesRounds,
       turnMs: this.deadline ? Math.max(0, Math.ceil((this.deadline - Date.now()) / this.speed)) : 0,
       turn: cur ? cur.id : null,
       sub: this.phase === 'play' ? this.sub : null,

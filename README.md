@@ -117,3 +117,6 @@ Observação: as salas ficam em memória; reiniciar o servidor encerra as partid
 ## Novidades da versão 16
 - **Voltar ao início sem perder a vaga:** depois da partida (ou no lobby), "Voltar ao início" guarda a sua vaga na sala por 30 minutos. Na home aparece "Voltar à sala XXXX": um toque e você reentra, sem novo convite. "Sair da sala" no menu continua saindo de vez.
 - A sala só é apagada depois de 45 minutos sem ninguém conectado. As salas continuam só na memória do servidor: se o Render reiniciar ou hibernar, elas somem.
+
+## Novidades da versão 17
+- **Salas abertas:** o anfitrião liga "Sala pública" no lobby (desligada por padrão) e a sala aparece na lista "salas abertas" da tela inicial, com anfitrião, vagas e configurações. Qualquer um entra com um toque, sem código. A lista mostra só salas públicas, no lobby ou entre partidas, com alguém conectado e vaga livre; atualiza sozinha a cada 5 s.

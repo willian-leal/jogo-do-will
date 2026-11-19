@@ -104,6 +104,7 @@
       retry = 0;
       const tok = localStorage.getItem('will_token');
       if (tok) send({ t: 'resume', token: tok });
+      if (!$('#home').hidden) send({ t: 'rooms' });
     };
     ws.onmessage = (ev) => {
       let m; try { m = JSON.parse(ev.data); } catch (_) { return; }
@@ -176,6 +177,9 @@
       toast(m.msg, 'bad');
     } else if (m.t === 'toast') {
       toast(m.msg, m.kind);
+    } else if (m.t === 'rooms') {
+      const ul = $('#roomList'); if (!ul) return;
+      ul.innerHTML = m.list.length ? m.list.map((r) => `<li><span class="grow">${esc(r.host)}<small> · ${r.players}/8${r.rounds > 1 ? ` · ${r.rounds} rodadas` : ''}${r.fast ? ' · rápido' : ''}${r.phase === 'ended' ? ' · entre partidas' : ''}</small></span><button class="btn" data-act="joinopen" data-code="${r.code}">Entrar</button></li>`).join('') : '<li class="empty">Nenhuma sala pública aberta agora.</li>';
     } else if (m.t === 'away') {
       localStorage.removeItem('will_token'); try { localStorage.setItem('will_away', JSON.stringify({ code: m.code, token: m.token })); } catch (_) { /* ignore */ }
       S = null; closeOverlay(); history.replaceState(null, '', location.pathname); show('home');
@@ -191,9 +195,11 @@
     t.textContent = msg; t.className = 'toast ' + (kind || ''); t.hidden = false;
     clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 3200);
   }
+  setInterval(() => { if (!$('#home').hidden && ws && ws.readyState === 1) send({ t: 'rooms' }); }, 5000);
   function show(name) {
     for (const id of ['home', 'lobby', 'game']) $('#' + id).hidden = id !== name;
     if (name === 'home') {
+      if (ws && ws.readyState === 1) send({ t: 'rooms' });
       const aw = getAway(), b = $('#backBtn');
       if (b) { b.hidden = !aw; if (aw) b.textContent = `Voltar à sala ${aw.code}`; }
     }
@@ -257,6 +263,7 @@
          ${turnSelHTML()}
          ${paceSelHTML()}
          ${roundsSelHTML()}
+         <label class="chk"><input type="checkbox" class="pubChk" ${S.public ? 'checked' : ''}> Sala pública (aparece na lista da tela inicial)</label>
          <button class="btn primary big" data-act="start" ${n < 2 ? 'disabled' : ''}>Iniciar partida</button>`
       : '';
     $('#lobbyHint').textContent = host
@@ -740,6 +747,7 @@
         window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`, '_blank', 'noopener');
         break;
       }
+      case 'joinopen': { const n = $('#nameInput').value.trim() || 'Jogador'; localStorage.setItem('will_name', n); send({ t: 'join', name: n, code: el.dataset.code }); break; }
       case 'leave': send({ t: 'leave' }); break;
       case 'away': send({ t: 'away' }); break;
       case 'backtoroom': { const aw = getAway(); if (aw) { localStorage.setItem('will_token', aw.token); send({ t: 'resume', token: aw.token }); } break; }
@@ -761,6 +769,7 @@
     }
   }
   document.addEventListener('change', (e) => {
+    if (e.target.classList && e.target.classList.contains('pubChk')) send({ t: 'setting', public: e.target.checked });
     if (e.target.classList && e.target.classList.contains('turnSel')) send({ t: 'setting', turnTime: Number(e.target.value) });
     if (e.target.classList && e.target.classList.contains('paceSel')) send({ t: 'setting', fast: e.target.value === '1' });
     if (e.target.dataset && e.target.dataset.a11y) { a11y[e.target.dataset.a11y] = e.target.checked; localStorage.setItem('will_a11y', JSON.stringify(a11y)); applyA11y(); if (S) render(); }
