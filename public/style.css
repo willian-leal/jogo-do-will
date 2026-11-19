@@ -284,3 +284,6 @@ html.hc .droptarget{outline-width:3px}
   .board.many .opp small{display:none}
   .board.many .center .card,.board.many .center .dstack{--card-w:46px;--card-h:65px}
 }
+
+.fxtag{position:fixed;transform:translate(-50%,-100%);z-index:41;pointer-events:none;background:rgba(0,0,0,.78);border:2px solid var(--gold);color:#fff;font-weight:700;font-size:.9rem;padding:4px 12px;border-radius:999px;white-space:nowrap}
+.fxtag.peek{border-color:var(--blue)}

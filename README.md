@@ -149,3 +149,8 @@ Observação: as salas ficam em memória; reiniciar o servidor encerra as partid
 - Nas suas cartas a marca fica até a carta sair da sua mão; nas dos adversários dura 20 s.
 - O aviso diz a posição: "Bia usou o Valete: trocou a 2ª carta sua com a 3ª carta de Caio" / "…espiou a 3ª carta sua" (7 s), e o histórico traz as mesmas posições.
 - Correção: o destaque dos poderes não aparecia porque a tela só era redesenhada depois de a animação acabar.
+
+## v24 — Animação dos poderes no momento da ação
+- Valete: as duas cartas escolhidas somem dos lugares, aparecem ampliadas (douradas) com o aviso "Fulano troca duas cartas", cruzam a mesa uma para o lugar da outra e só então reaparecem no lugar novo, com a marca ⇄.
+- Dama e 10: a carta alvo é levantada e ampliada (azul) com "Fulano olha esta carta" para todos; quem espiou a vê de frente.
+- Com "Reduzir animações" ligado, volta ao destaque simples + marcas.
