@@ -103,3 +103,6 @@ Observação: as salas ficam em memória; reiniciar o servidor encerra as partid
 - **Corte livre:** sem espera de 2 s e sem a etiqueta "corte aberto". Qualquer jogador pode cortar, quando quiser, enquanto nenhuma outra carta for descartada no monte (comprar da pilha não fecha o corte; pegar a carta do topo do descarte fecha). Só o primeiro corte certo vale.
 - **Narração opcional:** em Menu → Acessibilidade, "Mostrar narração da jogada no centro da mesa". Padrão: ligada nas 3 primeiras partidas, desligada depois. Com ela desligada ficam só "Sua vez", o aviso dos poderes e os erros.
 - **Correção:** um corte que encerra a partida com alguém segurando a carta comprada fazia a carta sumir (a simulação de 120 partidas pegou); agora ela volta ao fundo da pilha.
+
+## Novidades da versão 13
+- **Mesa quadrada:** você fica embaixo e os outros jogadores nos outros lados — esquerda, frente e direita —, no sentido da vez a partir de você. 2 jogadores: um de cada lado; 3: esquerda, frente e direita; 4 a 8: distribuídos entre os três lados. As pilhas ficam no centro. No celular, os lados mostram as cartas em 2×2 para caberem.

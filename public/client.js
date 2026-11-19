@@ -278,7 +278,7 @@
 
     /* oponentes */
     const canTarget = S.power && S.power.by === S.you && (S.power.type === 'Q' || S.power.type === 'J');
-    $('#opps').innerHTML = specs.map((p) => `
+    const oppHTML = (p) => `
       <div class="opp ${S.turn === p.id ? 'turn' : ''}" data-pid="${p.id}">
         <div class="pname">${esc(p.name)}${botTag(p)}${winsTag(p.wins)} <small>${p.count} carta${p.count === 1 ? '' : 's'}${p.connected ? '' : ' · off'}</small>${S.turn === p.id && turnEnd ? ' <span class="timer" data-timer></span>' : ''}</div>
         <div class="row oprow">${p.hand.map((c) => cardHTML(c, {
@@ -286,7 +286,20 @@
           cls: (canTarget ? 'target ' : '') + (sel.some((s) => s.id === c.id) ? 'selected' : ''),
         })).join('')}${S.inHand && S.inHand.by === p.id ? `<div class="inhandwrap" title="${S.inHand.from === 'discard' ? 'Pegou do descarte' : 'Comprou da pilha'}">${cardHTML(S.inHand.card || { id: 0 }, { cls: 'inhand' })}</div>` : ''}</div>
         ${S.phase === 'peek' ? `<small>${p.ready ? 'pronto' : 'memorizando…'}</small>` : ''}
-      </div>`).join('');
+      </div>`;
+    /* mesa quadrada: cada jogador num lado (esquerda, frente, direita), no sentido da vez a partir de você */
+    {
+      const order = S.players.filter((p) => p.inGame);
+      const mi = order.findIndex((p) => p.id === S.you);
+      const seq = specs.length === order.length && mi < 0 ? order : order.slice(mi + 1).concat(order.slice(0, Math.max(mi, 0))).filter((p) => specs.includes(p));
+      const n = seq.length;
+      const side = n >= 4 ? Math.floor(n / 3) : n === 2 ? 1 : n === 3 ? 1 : 0;
+      const top = n - 2 * side;
+      const L = seq.slice(0, side).reverse(), T = seq.slice(side, side + top), R = seq.slice(side + top);
+      $('#seatL').innerHTML = L.map(oppHTML).join('');
+      $('#seatT').innerHTML = T.map(oppHTML).join('');
+      $('#seatR').innerHTML = R.map(oppHTML).join('');
+    }
 
     /* centro: compra, descarte, carta comprada */
     const canDraw = myTurn && S.sub === 'draw';

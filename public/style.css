@@ -65,7 +65,15 @@ input:focus{box-shadow:0 0 0 3px rgba(232,184,74,.6)}
 .menu{position:absolute;right:0;top:50px;background:var(--deep);border:1px solid rgba(255,255,255,.25);border-radius:14px;padding:6px;display:flex;flex-direction:column;min-width:170px;z-index:8;box-shadow:0 10px 30px rgba(0,0,0,.45)}
 .menu button{background:none;border:0;color:var(--ivory);text-align:left;padding:12px 14px;font:600 .95rem var(--body);border-radius:10px;cursor:pointer;min-height:44px}
 .menu button:hover{background:rgba(255,255,255,.1)}
-.opps{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.board{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);grid-template-areas:"t t t" "l c r";gap:10px;align-items:center}
+.seat{display:flex;gap:10px;align-items:center;justify-content:center;min-width:0}
+.seat-t{grid-area:t;flex-wrap:wrap}
+.seat-l{grid-area:l;flex-direction:column}
+.seat-r{grid-area:r;flex-direction:column}
+.seat-t:empty{display:none}
+.center{grid-area:c}
+.seat-l .opp,.seat-r .opp{min-width:0;width:100%;max-width:170px;flex:0 1 auto;padding:8px 6px}
+.seat-l .oprow,.seat-r .oprow{justify-content:center;gap:4px}
 .opp{background:var(--deep);border:2px solid transparent;border-radius:16px;padding:10px;display:flex;flex-direction:column;align-items:center;gap:8px;min-width:128px;flex:1 1 128px;max-width:260px;transition:border-color .2s,box-shadow .2s}
 .opp.turn,.me.turn .mehead{border-color:var(--gold);box-shadow:0 0 0 3px rgba(232,184,74,.25)}
 .pname{font-weight:700;font-size:.92rem;display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:center}
@@ -75,7 +83,7 @@ input:focus{box-shadow:0 0 0 3px rgba(232,184,74,.6)}
 .opp .card .roundel{display:none}
 .opp small.cnt{color:var(--soft);font-size:.75rem}
 
-.center{display:flex;gap:30px;justify-content:center;align-items:flex-start;padding:10px 0;flex-wrap:wrap}
+.center{display:flex;gap:22px;justify-content:center;align-items:flex-start;padding:10px 0;flex-wrap:nowrap}
 .center .card{--card-w:72px;--card-h:102px}
 .pile{display:flex;flex-direction:column;align-items:center;gap:8px;font-size:.8rem;color:var(--soft)}
 .pile.drawable .card{cursor:pointer;box-shadow:0 0 0 3px var(--gold),0 8px 18px rgba(0,0,0,.4);animation:pulse 1.2s infinite}
@@ -157,8 +165,12 @@ select option{color:#111}
 .emojis button:active{transform:scale(.9)}
 
 @media (max-width:560px){
-  .center{gap:22px}
-  .center .card{--card-w:64px;--card-h:90px}
+  .board{gap:6px}
+  .center{gap:10px}
+  .center .card{--card-w:54px;--card-h:76px}
+  .seat-l .opp .card,.seat-r .opp .card{--card-w:30px;--card-h:42px}
+  .seat-l .opp .pname,.seat-r .opp .pname{font-size:.78rem}
+  .seat-l .opp .pname small,.seat-r .opp .pname small{display:none}
   .me .card{--card-w:68px;--card-h:96px}
   .opp{min-width:104px}
   .opp .card{--card-w:32px;--card-h:45px}
@@ -214,7 +226,7 @@ html.hc .droptarget{outline-width:3px}
 .dwrap .card{--card-w:inherit;--card-h:inherit;width:100%;height:100%}
 .dwrap .card.under{box-shadow:0 2px 5px rgba(0,0,0,.45);filter:brightness(.93)}
 #discardPile.drawable .card.under,#discardPile.cutopen .card.under{animation:none;box-shadow:0 2px 5px rgba(0,0,0,.45)}
-@media (max-width:560px){.center .dstack{--card-w:64px;--card-h:90px}}
+@media (max-width:560px){.center .dstack{--card-w:54px;--card-h:76px}}
 @media (min-width:900px){.center .dstack{--card-w:84px;--card-h:118px}}
 /* carta na mão de quem está jogando */
 .me .row.five{flex-wrap:nowrap;gap:6px}
@@ -233,3 +245,7 @@ html.hc .droptarget{outline-width:3px}
   .opp .card.inhand{--card-w:32px;--card-h:45px}
 }
 @media (min-width:900px){.me .handslot,.me .handslot .card{--card-w:92px;--card-h:128px}.me .handslot{width:92px;height:128px}}
+@media (min-width:561px){
+  .seat-l .opp,.seat-r .opp{max-width:240px}
+  .seat-l .oprow,.seat-r .oprow{flex-wrap:nowrap}
+}
